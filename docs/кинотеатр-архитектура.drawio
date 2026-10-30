@@ -1,0 +1,125 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Страница-1" id="HJCxT3-a7EmvZ4iZvZO8">
+    <mxGraphModel dx="2165" dy="694" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="g2nUTYsTpY4_e6ndANA8-6" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Text" vertex="1">
+          <mxGeometry height="180" width="200" x="580" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-1" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#222222;" value="Архитектура веб-приложения кинотеатра" vertex="1">
+          <mxGeometry height="36" width="680" x="-17.196741323002016" y="422.99997998847334" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-2" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontColor=#333333;" value="Онлайн-бронирование мест на киносеансы" vertex="1">
+          <mxGeometry height="24" width="480" x="82.80325867699798" y="456.99997998847334" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#999999;align=left;verticalAlign=top;spacingLeft=12;spacingTop=2;fontSize=11;fontColor=#777777;" value="Граница системы" vertex="1">
+          <mxGeometry height="530" width="1010" x="-87.19674132300202" y="504.99997998847334" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-4" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;" value="ПОЛЬЗОВАТЕЛИ" vertex="1">
+          <mxGeometry height="24" width="155" x="-292.196741323002" y="538.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-5" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;" value="FRONTEND" vertex="1">
+          <mxGeometry height="24" width="240" x="-52.196741323002016" y="538.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-6" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;" value="BACKEND" vertex="1">
+          <mxGeometry height="24" width="282" x="312.803258676998" y="538.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-7" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;" value="ДАННЫЕ" vertex="1">
+          <mxGeometry height="24" width="185" x="719.803258676998" y="538.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-8" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingRight=10;spacingTop=4;strokeColor=#666666;fillColor=#FFFFFF;fontSize=13;" value="&lt;div style=&quot;text-align:center;font-size:15px&quot;&gt;&lt;b&gt;Гость&lt;/b&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;Просмотр афиши&lt;/div&gt;&lt;div&gt;Регистрация / вход&lt;/div&gt;" vertex="1">
+          <mxGeometry height="100" width="155" x="-292.196741323002" y="581.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-9" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingRight=10;spacingTop=4;strokeColor=#666666;fillColor=#FFFFFF;fontSize=13;" value="&lt;div style=&quot;text-align:center;font-size:15px&quot;&gt;&lt;b&gt;Зритель&lt;/b&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;Выбор мест&lt;/div&gt;&lt;div&gt;Создание брони&lt;/div&gt;Мои бронирования&lt;br&gt;Отмена брони" vertex="1">
+          <mxGeometry height="128" width="155" x="-292.196741323002" y="734.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-10" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingRight=10;spacingTop=4;strokeColor=#666666;fillColor=#FFFFFF;fontSize=13;" value="&lt;div style=&quot;text-align:center;font-size:15px&quot;&gt;&lt;b&gt;Администратор&lt;/b&gt;&lt;/div&gt;&lt;br&gt;Фильмы и залыРасписание&lt;br&gt;Брони и их статусы" vertex="1">
+          <mxGeometry height="108" width="155" x="-292.196741323002" y="906.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-11" parent="1" style="rounded=1;arcSize=2;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingRight=10;spacingTop=4;strokeColor=#666666;fillColor=#FFFFFF;fontSize=13;" value="&lt;div style=&quot;font-size: 15px;&quot; align=&quot;center&quot;&gt;&lt;b&gt;Веб-интерфейс&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 12px;&quot;&gt;&lt;div align=&quot;center&quot;&gt;React • JavaScript • HTML/CSS&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;Афиша и карточки фильмовРасписание сеансов&lt;br&gt;&lt;/div&gt;Схема зала и выбор мест&lt;br&gt;Регистрация и вход&lt;br&gt;Оформление бронирования&lt;br&gt;Мои брони и история&lt;br&gt;Отмена бронирования&lt;/div&gt;" vertex="1">
+          <mxGeometry height="250" width="240" x="-52.196741323002016" y="581.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-12" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingRight=10;spacingTop=4;strokeColor=#666666;fillColor=#FFFFFF;fontSize=13;" value="&lt;div style=&quot;text-align:center;font-size:15px&quot;&gt;&lt;b&gt;Админ-панель&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;font-size:12px&quot;&gt;Раздел того же приложения&lt;/div&gt;&lt;br&gt;Фильмы, постеры, залы, местаУправление расписанием&lt;br&gt;Управление бронированиями" vertex="1">
+          <mxGeometry height="133" width="240" x="-52.196741323002016" y="879.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-13" parent="1" style="rounded=1;arcSize=1;whiteSpace=wrap;html=1;align=center;verticalAlign=top;spacingLeft=6;spacingRight=6;spacingTop=4;strokeColor=#666666;fillColor=#FFFFFF;fontSize=13;container=1;collapsible=0;" value="&lt;div style=&quot;font-size:15px&quot;&gt;&lt;b&gt;Серверное приложение&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;font-size:12px&quot;&gt;Python(Fast API)&lt;/div&gt;&amp;nbsp;" vertex="1">
+          <mxGeometry height="431" width="282" x="312.803258676998" y="581.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-14" parent="P0Zlt1535fV84FpM3uk3-13" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;strokeColor=#999999;fillColor=#F2F2F2;fontSize=13;" value="&lt;b style=&quot;font-size:14px&quot;&gt;Пользователи и доступ&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:12px&quot;&gt;Регистрация, вход, роли и сессии&lt;/span&gt;" vertex="1">
+          <mxGeometry height="67" width="262" x="10" y="88" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-15" parent="P0Zlt1535fV84FpM3uk3-13" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;strokeColor=#999999;fillColor=#F2F2F2;fontSize=13;" value="&lt;b style=&quot;font-size:14px&quot;&gt;Каталог и расписание&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:12px&quot;&gt;Фильмы, залы, места, сеансы&lt;br&gt;Проверка пересечения сеансов&lt;/span&gt;" vertex="1">
+          <mxGeometry height="87" width="262" x="10" y="173" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-16" parent="P0Zlt1535fV84FpM3uk3-13" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;strokeColor=#999999;fillColor=#F2F2F2;fontSize=13;" value="&lt;b style=&quot;font-size:14px&quot;&gt;Бронирование&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:12px&quot;&gt;Создание, отмена, история и статусы&lt;br&gt;Проверка даты и доступности мест&lt;br&gt;Проверка прав на изменение брони&lt;br&gt;Защита от двойного бронирования&lt;/span&gt;" vertex="1">
+          <mxGeometry height="129" width="262" x="10" y="279" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-17" parent="1" style="rounded=1;arcSize=2;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingRight=10;spacingTop=4;strokeColor=#666666;fillColor=#FFFFFF;fontSize=13;" value="&lt;div style=&quot;text-align:center;font-size:15px&quot;&gt;&lt;b&gt;База данных&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;font-size:12px&quot;&gt;PostgreSQL&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Пользователи, роли&lt;/div&gt;Сессии входа&lt;br&gt;Фильмы, залы, места&lt;br&gt;Сеансы&lt;br&gt;Брони и их статусы&lt;br&gt;Пути к постерам" vertex="1">
+          <mxGeometry height="223" width="185" x="719.803258676998" y="581.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-18" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingRight=10;spacingTop=4;strokeColor=#666666;fillColor=#FFFFFF;fontSize=13;" value="&lt;div style=&quot;text-align:center;font-size:15px&quot;&gt;&lt;b&gt;Хранилище файлов&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;font-size:12px&quot;&gt;Файловая система&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Постеры фильмов&lt;/div&gt;Постоянный каталог&lt;br&gt;на сервере" vertex="1">
+          <mxGeometry height="133" width="185" x="719.803258676998" y="879.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-19" parent="1" style="rounded=1;arcSize=2;whiteSpace=wrap;html=1;align=center;verticalAlign=top;spacingTop=4;strokeColor=#999999;fillColor=#F7F7F7;fontSize=13;container=1;collapsible=0;" value="&lt;b&gt;РАЗМЕЩЕНИЕ НА СЕРВЕРЕ&lt;/b&gt;" vertex="1">
+          <mxGeometry height="118" width="957" x="-60.696741323002016" y="1099.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-20" parent="P0Zlt1535fV84FpM3uk3-19" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#999999;fillColor=#FFFFFF;fontSize=13;" value="&lt;b style=&quot;font-size:14px&quot;&gt;Nginx&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;Frontend; HTTPS; /api → backend&lt;/span&gt;" vertex="1">
+          <mxGeometry height="48" width="190" x="12" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-21" parent="P0Zlt1535fV84FpM3uk3-19" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#999999;fillColor=#FFFFFF;fontSize=13;" value="&lt;b style=&quot;font-size:14px&quot;&gt;Python(Fast API)&lt;span style=&quot;font-size:11px&quot;&gt;Серверное приложение&lt;/span&gt;&lt;/b&gt;" vertex="1">
+          <mxGeometry height="48" width="243" x="375" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-22" parent="P0Zlt1535fV84FpM3uk3-19" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#999999;fillColor=#FFFFFF;fontSize=13;" value="&lt;b style=&quot;font-size:14px&quot;&gt;Данные&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;PostgreeSQL и каталог постеров&lt;/span&gt;" vertex="1">
+          <mxGeometry height="48" width="185" x="760" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-23" parent="P0Zlt1535fV84FpM3uk3-19" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;" value="К базе данных обращается только backend." vertex="1">
+          <mxGeometry height="22" width="400" x="278" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-24" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-8" style="endArrow=classic;html=1;rounded=0;strokeColor=#555555;fontSize=11;labelBackgroundColor=none;verticalAlign=bottom;" target="P0Zlt1535fV84FpM3uk3-11" value="Браузер">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-137.19674132300202" y="631.9999799884733" as="sourcePoint" />
+            <mxPoint x="-52.196741323002016" y="631.9999799884733" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-25" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-9" style="endArrow=classic;html=1;rounded=0;strokeColor=#555555;fontSize=11;labelBackgroundColor=none;verticalAlign=bottom;exitX=1;exitY=0.414;exitDx=0;exitDy=0;entryX=0;entryY=0.824;entryDx=0;entryDy=0;" target="P0Zlt1535fV84FpM3uk3-11" value="Браузер">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-26" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-10" style="endArrow=classic;html=1;rounded=0;strokeColor=#555555;fontSize=11;labelBackgroundColor=none;verticalAlign=bottom;exitX=1;exitY=0.463;exitDx=0;exitDy=0;entryX=0;entryY=0.579;entryDx=0;entryDy=0;" target="P0Zlt1535fV84FpM3uk3-12" value="Браузер">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-27" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-11" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#555555;fontSize=11;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.552;exitDx=0;exitDy=0;entryX=0;entryY=0.32;entryDx=0;entryDy=0;" target="P0Zlt1535fV84FpM3uk3-13" value="REST API / HTTPS&lt;br&gt;JSON">
+          <mxGeometry relative="1" x="-0.1" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-28" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-12" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#555555;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.504;exitDx=0;exitDy=0;entryX=0;entryY=0.529;entryDx=0;entryDy=0;" target="P0Zlt1535fV84FpM3uk3-13" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="252.80325867699798" y="946.9999799884733" />
+              <mxPoint x="252.80325867699798" y="809.9999799884733" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-29" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;" value="REST API / HTTPS&lt;br&gt;JSON" vertex="1">
+          <mxGeometry height="36" width="110" x="187.80325867699798" y="959.9999799884733" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-30" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-13" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#555555;fontSize=11;labelBackgroundColor=none;verticalAlign=bottom;exitX=1;exitY=0.327;exitDx=0;exitDy=0;entryX=0;entryY=0.632;entryDx=0;entryDy=0;" target="P0Zlt1535fV84FpM3uk3-17" value="SQL&lt;br&gt;Чтение / запись">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-31" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-13" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#555555;fontSize=11;labelBackgroundColor=none;verticalAlign=bottom;exitX=1;exitY=0.824;exitDx=0;exitDy=0;entryX=0;entryY=0.429;entryDx=0;entryDy=0;" target="P0Zlt1535fV84FpM3uk3-18" value="Файловый доступ&lt;br&gt;Чтение / запись">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-32" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-12" style="endArrow=none;html=1;rounded=0;dashed=1;dashPattern=6 4;strokeColor=#999999;" target="P0Zlt1535fV84FpM3uk3-20" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-33" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-13" style="endArrow=none;html=1;rounded=0;dashed=1;dashPattern=6 4;strokeColor=#999999;exitX=0.468;exitY=1;exitDx=0;exitDy=0;" target="P0Zlt1535fV84FpM3uk3-21" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P0Zlt1535fV84FpM3uk3-34" edge="1" parent="1" source="P0Zlt1535fV84FpM3uk3-18" style="endArrow=none;html=1;rounded=0;dashed=1;dashPattern=6 4;strokeColor=#999999;exitX=0.49;exitY=1;exitDx=0;exitDy=0;" target="P0Zlt1535fV84FpM3uk3-22" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

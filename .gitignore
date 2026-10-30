@@ -1,0 +1,19 @@
+# окружение и секреты
+.env
+*.env
+
+# зависимости
+node_modules/
+__pycache__/
+.venv/
+venv/
+
+# сборка
+dist/
+build/
+
+# IDE и система
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
