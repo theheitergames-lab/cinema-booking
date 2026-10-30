@@ -8,7 +8,7 @@
 
 \## Стек
 
-\- Frontend: React
+\- - Frontend: React + Vite + React Router
 
 \- Backend: Python, FastAPI
 
