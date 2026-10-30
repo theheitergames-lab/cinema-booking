@@ -8,7 +8,7 @@
 
 \## Стек
 
-\- Frontend: React
+\- Frontend: React (JavaScript)
 
 \- Backend: Python, FastAPI
 
