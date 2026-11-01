@@ -7,7 +7,7 @@
 -- чтобы скрипт можно было запускать повторно
 DROP TABLE IF EXISTS booking_seats, bookings, screenings, seats, halls, movies, users CASCADE;
 DROP FUNCTION IF EXISTS check_seat_free() CASCADE;
-
+DROP FUNCTION IF EXISTS check_booking_status() CASCADE;
 
 -- ---------- Пользователи ----------
 -- гость после регистрации становится viewer, admin заводится вручную
@@ -125,6 +125,20 @@ CREATE TRIGGER trg_check_seat_free
 BEFORE INSERT ON booking_seats
 FOR EACH ROW EXECUTE FUNCTION check_seat_free();
 
+-- нельзя вернуть отменённую или завершённую бронь в active:
+-- места могли успеть занять, а проверка триггера выше этого не увидит
+CREATE FUNCTION check_booking_status() RETURNS trigger AS $$
+BEGIN
+    IF OLD.status <> 'active' AND NEW.status = 'active' THEN
+        RAISE EXCEPTION 'Бронь % имеет статус %, вернуть её в active нельзя', OLD.id, OLD.status;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_booking_status
+BEFORE UPDATE OF status ON bookings
+FOR EACH ROW EXECUTE FUNCTION check_booking_status();
 
 -- =====================================================================
 -- Тестовые данные
