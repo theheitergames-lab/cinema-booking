@@ -14,11 +14,14 @@ DROP FUNCTION IF EXISTS check_seat_free() CASCADE;
 CREATE TABLE users (
     id            SERIAL PRIMARY KEY,
     name          VARCHAR(100) NOT NULL,
-    email         VARCHAR(255) NOT NULL UNIQUE,
+    email         VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role          VARCHAR(20)  NOT NULL DEFAULT 'viewer'
                   CHECK (role IN ('viewer', 'admin'))
 );
+
+-- уникальность email без учёта регистра
+CREATE UNIQUE INDEX idx_users_email_lower ON users (lower(email));
 
 -- ---------- Фильмы ----------
 CREATE TABLE movies (
