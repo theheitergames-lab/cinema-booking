@@ -7,18 +7,21 @@
 -- чтобы скрипт можно было запускать повторно
 DROP TABLE IF EXISTS booking_seats, bookings, screenings, seats, halls, movies, users CASCADE;
 DROP FUNCTION IF EXISTS check_seat_free() CASCADE;
-
+DROP FUNCTION IF EXISTS check_booking_status() CASCADE;
 
 -- ---------- Пользователи ----------
 -- гость после регистрации становится viewer, admin заводится вручную
 CREATE TABLE users (
     id            SERIAL PRIMARY KEY,
     name          VARCHAR(100) NOT NULL,
-    email         VARCHAR(255) NOT NULL UNIQUE,
+    email         VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role          VARCHAR(20)  NOT NULL DEFAULT 'viewer'
                   CHECK (role IN ('viewer', 'admin'))
 );
+
+-- уникальность email без учёта регистра
+CREATE UNIQUE INDEX idx_users_email_lower ON users (lower(email));
 
 -- ---------- Фильмы ----------
 CREATE TABLE movies (
@@ -27,6 +30,7 @@ CREATE TABLE movies (
     description      TEXT,
     duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0),
     age_rating       VARCHAR(5) CHECK (age_rating IN ('0+', '6+', '12+', '16+', '18+')),
+    genre            VARCHAR(50),
     poster_path      VARCHAR(500)   -- путь к файлу в каталоге постеров на сервере
 );
 
@@ -121,6 +125,20 @@ CREATE TRIGGER trg_check_seat_free
 BEFORE INSERT ON booking_seats
 FOR EACH ROW EXECUTE FUNCTION check_seat_free();
 
+-- нельзя вернуть отменённую или завершённую бронь в active:
+-- места могли успеть занять, а проверка триггера выше этого не увидит
+CREATE FUNCTION check_booking_status() RETURNS trigger AS $$
+BEGIN
+    IF OLD.status <> 'active' AND NEW.status = 'active' THEN
+        RAISE EXCEPTION 'Бронь % имеет статус %, вернуть её в active нельзя', OLD.id, OLD.status;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_booking_status
+BEFORE UPDATE OF status ON bookings
+FOR EACH ROW EXECUTE FUNCTION check_booking_status();
 
 -- =====================================================================
 -- Тестовые данные
@@ -137,9 +155,9 @@ SELECT 1, r, s FROM generate_series(1, 5) r, generate_series(1, 10) s;
 INSERT INTO seats (hall_id, row_number, seat_number)
 SELECT 2, r, s FROM generate_series(1, 4) r, generate_series(1, 8) s;
 
-INSERT INTO movies (title, description, duration_minutes, age_rating, poster_path) VALUES
-    ('Космический рейс', 'Фантастика про экипаж дальнего корабля', 140, '12+', 'posters/space.jpg'),
-    ('Тихий город',      'Детектив в маленьком городке',           105, '16+', 'posters/town.jpg');
+INSERT INTO movies (title, description, duration_minutes, age_rating, genre, poster_path) VALUES
+    ('Космический рейс', 'Фантастика про экипаж дальнего корабля', 140, '12+', 'Фантастика', 'posters/space.jpg'),
+    ('Тихий город',      'Детектив в маленьком городке',           105, '16+', 'Детектив',   'posters/town.jpg');
 
 INSERT INTO screenings (movie_id, hall_id, starts_at, end_at) VALUES
     (1, 1, '2026-11-01 18:00', '2026-11-01 20:20'),
