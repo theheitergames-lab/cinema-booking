@@ -1,4 +1,8 @@
+import { useState } from 'react'
+import AuthDialog from './AuthDialog'
+
 export default function BookingReview({ movieTitle, screening, seats, onBack }) {
+  const [showLogin, setShowLogin] = useState(false)
   const date = new Date(screening.startsAt).toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
@@ -20,6 +24,18 @@ export default function BookingReview({ movieTitle, screening, seats, onBack }) 
       </ul>
 
       <p className="muted">Места ещё не забронированы.</p>
+
+      <button
+        type="button"
+        className="button button-primary"
+        onClick={() => setShowLogin(true)}
+      >
+        Войти для бронирования
+      </button>
+
+      {showLogin && (
+        <AuthDialog forBooking onClose={() => setShowLogin(false)} />
+      )}
 
       <button type="button" className="button button-outline" onClick={onBack}>
         ← Изменить места

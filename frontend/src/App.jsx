@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import ScreeningPicker from './ScreeningPicker'
 import SeatMap from './SeatMap'
+import AuthDialog from './AuthDialog'
 
 const movies = [
   {
@@ -47,6 +48,7 @@ function App() {
   const [genre, setGenre] = useState('Все жанры')
   const [selectedMovie, setSelectedMovie] = useState(null)
   const [activeScreening, setActiveScreening] = useState(null)
+  const [showLogin, setShowLogin] = useState(false)
 
   const filteredMovies = movies.filter((movie) => {
     const matchesSearch = movie.title
@@ -71,9 +73,17 @@ function App() {
             <a href="#about">О кинотеатре</a>
           </nav>
 
-          <span className="header-caption">Время для кино</span>
+          <button
+            type="button"
+            className="button button-outline header-login"
+            onClick={() => setShowLogin(true)}
+          >
+            Войти
+          </button>
         </div>
       </header>
+
+      {showLogin && <AuthDialog onClose={() => setShowLogin(false)} />}
 
       <main>
         <section className="hero">
