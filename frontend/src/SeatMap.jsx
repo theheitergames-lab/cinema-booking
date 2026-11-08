@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { demoHalls, occupiedByScreening } from './demoHalls'
 import './SeatMap.css'
+import BookingReview from './BookingReview'
 
-export default function SeatMap({ screening }) {
+export default function SeatMap({ screening, movieTitle }) {
   const [selectedSeats, setSelectedSeats] = useState([])
+  const [showReview, setShowReview] = useState(false)
   const hall = demoHalls[screening.hall]
   const occupied = occupiedByScreening[screening.id] ?? []
 
@@ -16,6 +18,17 @@ export default function SeatMap({ screening }) {
       previous.includes(id)
         ? previous.filter((seat) => seat !== id)
         : [...previous, id]
+    )
+  }
+
+  if (showReview) {
+    return (
+      <BookingReview
+        movieTitle={movieTitle}
+        screening={screening}
+        seats={selectedSeats}
+        onBack={() => setShowReview(false)}
+      />
     )
   }
 
@@ -66,6 +79,16 @@ export default function SeatMap({ screening }) {
               return `ряд ${row}, место ${number}`
             }).join('; ')}
       </p>
+
+      <button
+        type="button"
+        className="button button-primary booking-next"
+        disabled={selectedSeats.length === 0}
+        onClick={() => setShowReview(true)}
+      >
+        Перейти к бронированию →
+      </button>
+
     </section>
   )
 }

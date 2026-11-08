@@ -577,3 +577,35 @@ h2 {
 .seat-page .seat-page-inner > .muted {
   margin: 0 0 28px;
 }
+
+.booking-next {
+  margin-top: 20px;
+}
+
+.booking-next:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.booking-review {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.booking-review h2,
+.booking-review ul {
+  margin: 0;
+}
+
+.booking-review ul {
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+.booking-review button {
+  justify-self: start;
+}

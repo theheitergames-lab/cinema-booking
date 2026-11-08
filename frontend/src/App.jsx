@@ -247,7 +247,11 @@ function App() {
               {activeScreening.hall}
             </p>
 
-            <SeatMap key={activeScreening.id} screening={activeScreening} />
+            <SeatMap
+              key={activeScreening.id}
+              screening={activeScreening}
+              movieTitle={selectedMovie.title}
+            />
           </div>
         </section>
       )}
