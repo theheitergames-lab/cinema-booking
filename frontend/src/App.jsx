@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import ScreeningPicker from './ScreeningPicker'
 
 const movies = [
   {
@@ -211,10 +212,7 @@ function App() {
             <p className="muted">
               {selectedMovie.age} · {selectedMovie.duration}
             </p>
-            <p className="demo-note">
-              Это учебная карточка. Расписание и выбор мест добавим
-              на следующем этапе.
-            </p>
+            <ScreeningPicker key={selectedMovie.id} movieId={selectedMovie.id} />
           </section>
         </div>
       )}

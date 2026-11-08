@@ -466,3 +466,90 @@ h2 {
     gap: 16px;
   }
 }
+
+.movie-modal .demo-note {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.movie-modal {
+  position: relative;
+  padding-top: 24px;
+}
+
+.movie-modal .close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  margin: 0;
+}
+
+.movie-modal > .eyebrow {
+  padding-right: 100px;
+  min-height: 20px;
+}
+
+.movie-modal > h2 {
+  margin-top: 8px;
+}
+
+.movie-schedule label {
+  color: #f5f5f6;
+  font-weight: 700;
+}
+
+.movie-schedule input {
+  width: 100%;
+  max-width: 220px;
+  min-height: 44px;
+  padding: 8px 12px;
+  color-scheme: dark;
+  color: #f5f5f6;
+  background: #19191d;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.movie-schedule h3 {
+  margin-top: 8px;
+}
+
+.screening-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.screening-button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.screening-button:hover,
+.screening-button:focus-visible {
+  border-color: var(--accent);
+  background: #e7204214;
+}
+
+.screening-button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.screening-list strong {
+  color: #f5f5f6;
+}
