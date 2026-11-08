@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import ScreeningPicker from './ScreeningPicker'
+import SeatMap from './SeatMap'
 
 const movies = [
   {
@@ -45,6 +46,7 @@ function App() {
   const [search, setSearch] = useState('')
   const [genre, setGenre] = useState('Все жанры')
   const [selectedMovie, setSelectedMovie] = useState(null)
+  const [activeScreening, setActiveScreening] = useState(null)
 
   const filteredMovies = movies.filter((movie) => {
     const matchesSearch = movie.title
@@ -191,7 +193,7 @@ function App() {
       </footer>
 
       {selectedMovie && (
-        <div className="modal-backdrop">
+        <div className="modal-backdrop" hidden={activeScreening !== null}>
           <section
             className="movie-modal"
             role="dialog"
@@ -212,9 +214,42 @@ function App() {
             <p className="muted">
               {selectedMovie.age} · {selectedMovie.duration}
             </p>
-            <ScreeningPicker key={selectedMovie.id} movieId={selectedMovie.id} />
-          </section>
+            <ScreeningPicker
+              key={selectedMovie.id}
+              movieId={selectedMovie.id}
+              onSelectScreening={setActiveScreening}
+            />
+                    </section>
         </div>
+      )}
+
+      {activeScreening && selectedMovie && (
+        <section className="seat-page" aria-labelledby="seat-page-title">
+          <div className="seat-page-inner container">
+            <button
+              type="button"
+              className="button button-outline"
+              onClick={() => setActiveScreening(null)}
+            >
+              ← К сеансам
+            </button>
+
+            <p className="eyebrow">Выбор мест</p>
+            <h1 id="seat-page-title">{selectedMovie.title}</h1>
+            <p className="muted">
+              {new Date(activeScreening.startsAt).toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'long',
+              })}
+              {' · '}
+              {activeScreening.startsAt.slice(11, 16)}
+              {' · '}
+              {activeScreening.hall}
+            </p>
+
+            <SeatMap key={activeScreening.id} screening={activeScreening} />
+          </div>
+        </section>
       )}
     </>
   )

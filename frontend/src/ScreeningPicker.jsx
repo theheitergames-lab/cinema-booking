@@ -9,7 +9,7 @@ function getToday() {
   return `${year}-${month}-${day}`
 }
 
-export default function ScreeningPicker({ movieId }) {
+export default function ScreeningPicker({ movieId, onSelectScreening }) {
   const [selectedDay, setSelectedDay] = useState(getToday)
   const [selectedId, setSelectedId] = useState(null)
 
@@ -48,7 +48,10 @@ export default function ScreeningPicker({ movieId }) {
               type="button"
               className="screening-button"
               aria-pressed={selectedId === item.id}
-              onClick={() => setSelectedId(item.id)}
+              onClick={() => {
+                setSelectedId(item.id)
+                onSelectScreening(item)
+              }}
             >
               <strong>{item.startsAt.slice(11, 16)}</strong>
               <span>{item.hall}</span>
