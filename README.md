@@ -1,9 +1,7 @@
 # Онлайн-бронирование мест в кинотеатре
 
 Учебный проект по дисциплине «Технологии веб-программирования».
-# Онлайн-бронирование мест в кинотеатре
 
-Учебный проект по дисциплине «Технологии веб-программирования».
 
 ## Стек
 - Frontend: React (JavaScript), Vite, React Router
@@ -27,4 +25,41 @@
 - Файл `.env` с паролями не коммитим.
 
 ## Запуск
+
+### Что нужно установить
+- Python 3.10+ (проверено на 3.14) с python.org
+- PostgreSQL (проверено на 18)
+
+### База данных
+1. В pgAdmin создать базу `Cinema`.
+2. Выполнить в ней скрипт `docs/cinema_schema.sql` (Query Tool → открыть файл → Execute).
+   Внимание: скрипт начинается с `DROP`, при повторном запуске данные удаляются.
+
+### Backend
+Команды для PowerShell, из корня репозитория:
+
+```powershell
+cd backend
+py -m venv venv                       # создать виртуальное окружение
+.\venv\Scripts\Activate.ps1           # активировать (в начале строки появится (venv))
+pip install -r requirements.txt       # установить зависимости
+Copy-Item .env.example .env           # создать файл настроек
+```
+
+Открыть `backend/.env` и указать свой пароль от PostgreSQL в `DB_PASSWORD`.
+
+Запуск сервера:
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+Проверка:
+- http://127.0.0.1:8000/health — ответ `{"status": "ok"}`
+- http://127.0.0.1:8000/docs — документация API (Swagger)
+
+Если активация выдаёт ошибку «выполнение сценариев отключено», один раз выполнить:
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+
+### Frontend
 Будет добавлено.
