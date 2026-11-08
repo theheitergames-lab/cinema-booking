@@ -1,40 +1,65 @@
-\# Онлайн-бронирование мест в кинотеатре
-
-
+# Онлайн-бронирование мест в кинотеатре
 
 Учебный проект по дисциплине «Технологии веб-программирования».
 
 
+## Стек
+- Frontend: React (JavaScript), Vite, React Router
+- Backend: Python, FastAPI
+- БД: PostgreSQL
 
-\## Стек
+## Структура
+- `backend/` — серверная часть
+- `frontend/` — клиентская часть
+- `docs/` — диаграммы, схема БД, проектное задание
 
-\- - Frontend: React + Vite + React Router
+## Команда
+- Гребенюк Дмитрий — backend
+- Соколова Екатерина — frontend
 
-\- Backend: Python, FastAPI
+## Правила работы с Git
+- В `main` напрямую не коммитим, только через Pull Request.
+- Одна задача — одна ветка: `feature/...`, `fix/...`, `docs/...`, `chore/...`.
+- Перед началом работы: `git switch main`, `git pull`, затем новая ветка.
+- Сообщения коммитов с префиксом: `feat:`, `fix:`, `docs:`, `chore:`.
+- Файл `.env` с паролями не коммитим.
 
-\- БД: PostgreSQL
+## Запуск
 
+### Что нужно установить
+- Python 3.10+ (проверено на 3.14) с python.org
+- PostgreSQL (проверено на 18)
 
+### База данных
+1. В pgAdmin создать базу `Cinema`.
+2. Выполнить в ней скрипт `docs/cinema_schema.sql` (Query Tool → открыть файл → Execute).
+   Внимание: скрипт начинается с `DROP`, при повторном запуске данные удаляются.
 
-\## Структура
+### Backend
+Команды для PowerShell, из корня репозитория:
 
-\- `backend/` — серверная часть
+```powershell
+cd backend
+py -m venv venv                       # создать виртуальное окружение
+.\venv\Scripts\Activate.ps1           # активировать (в начале строки появится (venv))
+pip install -r requirements.txt       # установить зависимости
+Copy-Item .env.example .env           # создать файл настроек
+```
 
-\- `frontend/` — клиентская часть
+Открыть `backend/.env` и указать свой пароль от PostgreSQL в `DB_PASSWORD`.
 
-\- `docs/` — диаграммы, схема БД, проектное задание
+Запуск сервера:
 
+```powershell
+uvicorn app.main:app --reload
+```
 
+Проверка:
+- http://127.0.0.1:8000/health — ответ `{"status": "ok"}`
+- http://127.0.0.1:8000/docs — документация API (Swagger)
 
-\## Команда
+Если активация выдаёт ошибку «выполнение сценариев отключено», один раз выполнить:
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
 
-\- Гребенюк Дмитрий — backend
-
-\- Соколова Екатерина — frontend
-
-
-
-\## Запуск
-
+### Frontend
 Будет добавлено.
-

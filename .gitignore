@@ -17,3 +17,6 @@ build/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# личные материалы, не для репозитория
+docs/Проектная работа.xlsx
