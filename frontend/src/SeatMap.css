@@ -1,0 +1,71 @@
+.seat-map {
+  min-width: 0;
+  margin-top: 16px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.cinema-screen {
+  width: 75%;
+  margin: 24px auto 20px;
+  padding-top: 6px;
+  border-top: 3px solid #a0a0a8;
+  border-radius: 50% 50% 0 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+.seat-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 7px;
+}
+
+.row-label {
+  flex: 0 0 38px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.seat {
+  flex: 0 1 38px;
+  min-width: 0;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #777780;
+  border-radius: 7px 7px 3px 3px;
+  background: #242428;
+  color: white;
+  font-size: 13px;
+}
+
+.seat:not(:disabled):hover {
+  border-color: var(--accent);
+}
+
+.seat[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.seat:disabled {
+  border-color: transparent;
+  background: #38383d;
+  color: #9999a1;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.seat-legend {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.seat-summary {
+  margin-top: 10px;
+  color: white;
+}
