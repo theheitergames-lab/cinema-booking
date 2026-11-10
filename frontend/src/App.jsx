@@ -6,6 +6,35 @@ import AuthDialog from './AuthDialog'
 import AccountPage from './AccountPage'
 import AdminPage from './AdminPage'
 
+function MoviePoster({ movie }) {
+  const [failed, setFailed] = useState(false)
+  const path = movie.poster_path?.trim()
+
+  return (
+    <div className={`poster poster-${movie.id % 2 ? 'train' : 'thriller'}`}>
+      {path && !failed ? (
+        <img
+          className="poster-image"
+          src={path}
+          alt={`Постер фильма «${movie.title}»`}
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <>
+          <span className="poster-caption">{movie.description}</span>
+          <strong className="poster-title">{movie.title}</strong>
+          <span className="poster-label">КАДР / КИНО</span>
+        </>
+      )}
+
+      {movie.age_rating && (
+        <span className="age">{movie.age_rating}</span>
+      )}
+    </div>
+  )
+}
+
 function App() {
   const [movies, setMovies] = useState([])
   const [moviesStatus, setMoviesStatus] = useState('loading')
@@ -50,10 +79,12 @@ function App() {
     const matchesGenre = genre === 'Все жанры' || movie.genre === genre
     return matchesSearch && matchesGenre
   })
+
   const preview = new URLSearchParams(window.location.search).get('preview')
     if (import.meta.env.DEV && preview === 'admin') {
     return <AdminPage />
   }
+
   if (import.meta.env.DEV && (preview === 'account' || preview === 'empty')) {
     return (
       <AccountPage
@@ -160,6 +191,7 @@ function App() {
           </div>
 
           {moviesStatus === 'loading' && <p>Загружаем афишу…</p>}
+
           {moviesStatus === 'error' && (
             <p role="alert">Не удалось загрузить афишу. Попробуй обновить страницу.</p>
           )}
@@ -167,17 +199,14 @@ function App() {
           <div className="movie-grid">
             {filteredMovies.map((movie) => (
               <article className="movie-card" key={movie.id}>
-                <div className={`poster poster-${movie.id % 2 ? 'train' : 'thriller'}`}>
-                  <span className="age">{movie.age_rating}</span>
-                  <span className="poster-caption">{movie.description}</span>
-                  <strong className="poster-title">{movie.title}</strong>
-                  <span className="poster-label">КАДР / КИНО</span>
-                </div>
+                <MoviePoster key={movie.poster_path} movie={movie} />
 
                 <p className="movie-meta">
                   {movie.genre} · {movie.duration_minutes} мин
                 </p>
+
                 <h3>{movie.title}</h3>
+
                 <button
                   type="button"
                   className="button button-outline"
