@@ -71,6 +71,9 @@ function App() {
     return () => controller.abort()
   }, [])
 
+  const featuredMovie = movies.find(
+    (movie) => movie.title === 'Гарри Поттер и философский камень'
+  )
   const genres = [...new Set(movies.map((movie) => movie.genre).filter(Boolean))]
   const query = search.trim().toLowerCase()
 
@@ -136,18 +139,30 @@ function App() {
         <section className="hero">
           <div className="container hero-inner">
             <p className="eyebrow">Кинотеатр «КАДР»</p>
-            <h1>
-              Большое кино.
+                        <h1>
+              Гарри Поттер
               <br />
-              Твои эмоции.
+              и философский камень
             </h1>
+
             <p className="hero-description">
-              Истории, ради которых стоит отложить всё.
-              Выбирай фильм — и встретимся в зале.
+              {featuredMovie
+                ? [
+                    featuredMovie.genre,
+                    `${featuredMovie.duration_minutes} мин`,
+                    featuredMovie.age_rating,
+                  ].filter(Boolean).join(' · ')
+                : 'Гарри впервые приезжает в Хогвартс.'}
             </p>
-            <a className="button button-primary" href="#afisha">
-              Смотреть афишу <span aria-hidden="true">↗</span>
-            </a>
+
+            <button
+              type="button"
+              className="button button-primary"
+              disabled={!featuredMovie}
+              onClick={() => setSelectedMovie(featuredMovie)}
+            >
+              Выбрать сеанс <span aria-hidden="true">↗</span>
+            </button>
             <div className="hero-bottom">
               <span>Выбери фильм. Найди своё место.</span>
               <span>01 / КАДР</span>

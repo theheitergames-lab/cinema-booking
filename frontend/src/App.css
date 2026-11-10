@@ -71,7 +71,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 64px;
-  min-height: 88px;
+  min-height: 68px;
 }
 
 .logo {
@@ -109,9 +109,13 @@ h2 {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background:
+  /* background:
     linear-gradient(110deg, #141416 35%, transparent),
-    radial-gradient(ellipse at 90% 40%, #791b2b, #191215 70%);
+    radial-gradient(ellipse at 90% 40%, #791b2b, #191215 70%); */
+  background-image: url('/images/hogwarts.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
 }
 
 .hero-inner {
@@ -122,9 +126,9 @@ h2 {
 
 .hero h1 {
   margin-top: 22px;
-  font-size: clamp(44px, 6.5vw, 86px);
-  line-height: 1.02;
-  letter-spacing: -3px;
+  font-size: clamp(44px, 4.2vw, 56px);
+  line-height: 1.08;
+  letter-spacing: -1.5px;
 }
 
 .hero-description {
@@ -666,4 +670,19 @@ h2 {
 
 .poster .age {
   z-index: 2;
+}
+
+@media (min-width: 901px) {
+  .hero-inner {
+    box-sizing: border-box;
+    min-height: 580px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-bottom {
+    align-self: stretch;
+    margin-top: auto;
+  }
 }
