@@ -4,6 +4,7 @@ import ScreeningPicker from './ScreeningPicker'
 import SeatMap from './SeatMap'
 import AuthDialog from './AuthDialog'
 import AccountPage from './AccountPage'
+import AdminPage from './AdminPage'
 
 function App() {
   const [movies, setMovies] = useState([])
@@ -50,6 +51,9 @@ function App() {
     return matchesSearch && matchesGenre
   })
   const preview = new URLSearchParams(window.location.search).get('preview')
+    if (import.meta.env.DEV && preview === 'admin') {
+    return <AdminPage />
+  }
   if (import.meta.env.DEV && (preview === 'account' || preview === 'empty')) {
     return (
       <AccountPage
