@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { demoScreenings } from './demoScreenings'
+import { useEffect, useState } from 'react'
 
 function getToday() {
   const today = new Date()
@@ -11,18 +10,50 @@ function getToday() {
 
 export default function ScreeningPicker({ movieId, onSelectScreening }) {
   const [selectedDay, setSelectedDay] = useState(getToday)
-  const [selectedId, setSelectedId] = useState(null)
+  const [result, setResult] = useState(null)
 
-  const screenings = demoScreenings
-    .filter((item) =>
-      item.movieId === movieId && item.startsAt.slice(0, 10) === selectedDay
-    )
-    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+  const query = new URLSearchParams({
+    movie_id: movieId,
+    date: selectedDay,
+  }).toString()
 
-  function changeDay(event) {
-    setSelectedDay(event.target.value)
-    setSelectedId(null)
-  }
+  useEffect(() => {
+    if (!selectedDay) return
+    const controller = new AbortController()
+
+    async function loadScreenings() {
+      try {
+        const response = await fetch(`/api/screenings?${query}`, {
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error(`Не удалось загрузить сеансы (${response.status}).`)
+        }
+
+        const data = await response.json()
+        if (!Array.isArray(data) || !data.every(item =>
+          item.id != null &&
+          typeof item.starts_at === 'string' &&
+          typeof item.hall_name === 'string'
+        )) {
+          throw new Error('Формат сеансов отличается от ожидаемого.')
+        }
+
+        if (!controller.signal.aborted) setResult({ query, data })
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setResult({ query, error: error.message })
+        }
+      }
+    }
+
+    loadScreenings()
+    return () => controller.abort()
+  }, [query, selectedDay])
+
+  // При смене даты не показываем сеансы от предыдущей даты.
+  const current = result?.query === query ? result : null
 
   return (
     <section className="demo-note movie-schedule">
@@ -31,30 +62,34 @@ export default function ScreeningPicker({ movieId, onSelectScreening }) {
         id="screening-date"
         type="date"
         value={selectedDay}
-        onChange={changeDay}
+        onChange={event => setSelectedDay(event.target.value)}
       />
 
       <h3>Сеансы</h3>
 
       {!selectedDay ? (
-        <p>Выбери дату, чтобы посмотреть расписание.</p>
-      ) : screenings.length === 0 ? (
+        <p>Выбери дату.</p>
+      ) : !current ? (
+        <p>Загружаем расписание…</p>
+      ) : current.error ? (
+        <p role="alert">{current.error}</p>
+      ) : current.data.length === 0 ? (
         <p>На этот день сеансов нет.</p>
       ) : (
         <div className="screening-list">
-          {screenings.map((item) => (
+          {current.data.map(item => (
             <button
               key={item.id}
               type="button"
               className="screening-button"
-              aria-pressed={selectedId === item.id}
-              onClick={() => {
-                setSelectedId(item.id)
-                onSelectScreening(item)
-              }}
+              onClick={() => onSelectScreening({
+                ...item,
+                startsAt: item.starts_at,
+                hall: item.hall_name,
+              })}
             >
-              <strong>{item.startsAt.slice(11, 16)}</strong>
-              <span>{item.hall}</span>
+              <strong>{item.starts_at.slice(11, 16)}</strong>
+              <span>{item.hall_name}</span>
             </button>
           ))}
         </div>
