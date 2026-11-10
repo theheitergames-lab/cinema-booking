@@ -140,33 +140,7 @@ CREATE TRIGGER trg_check_booking_status
 BEFORE UPDATE OF status ON bookings
 FOR EACH ROW EXECUTE FUNCTION check_booking_status();
 
--- =====================================================================
--- Тестовые данные
--- =====================================================================
-INSERT INTO users (name, email, password_hash, role) VALUES
-    ('Администратор', 'admin@cinema.local', '$2b$12$replace_with_real_hash', 'admin'),
-    ('Иван Петров',   'ivan@example.com',   '$2b$12$replace_with_real_hash', 'viewer');
-
-INSERT INTO halls (name) VALUES ('Зал 1'), ('Зал 2');
-
--- зал 1: 5 рядов по 10 мест, зал 2: 4 ряда по 8 мест
-INSERT INTO seats (hall_id, row_number, seat_number)
-SELECT 1, r, s FROM generate_series(1, 5) r, generate_series(1, 10) s;
-INSERT INTO seats (hall_id, row_number, seat_number)
-SELECT 2, r, s FROM generate_series(1, 4) r, generate_series(1, 8) s;
-
-INSERT INTO movies (title, description, duration_minutes, age_rating, genre, poster_path) VALUES
-    ('Космический рейс', 'Фантастика про экипаж дальнего корабля', 140, '12+', 'Фантастика', 'posters/space.jpg'),
-    ('Тихий город',      'Детектив в маленьком городке',           105, '16+', 'Детектив',   'posters/town.jpg');
-
-INSERT INTO screenings (movie_id, hall_id, starts_at, end_at) VALUES
-    (1, 1, '2026-11-01 18:00', '2026-11-01 20:20'),
-    (2, 1, '2026-11-01 21:00', '2026-11-01 22:45'),
-    (2, 2, '2026-11-02 19:00', '2026-11-02 20:45');
-
-INSERT INTO bookings (user_id, screening_id) VALUES (2, 1);
-INSERT INTO booking_seats (booking_id, seat_id) VALUES (1, 5), (1, 6);
-
+-- Тестовые данные вынесены в docs/seed.sql
 
 -- =====================================================================
 -- Примеры запросов для backend
