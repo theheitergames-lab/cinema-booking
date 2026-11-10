@@ -1,122 +1,173 @@
 import { useState } from 'react'
 import './AdminPage.css'
+import {
+  bookingLabels,
+  changeBookingStatus,
+  formatStart,
+  previewBookings,
+  previewHalls,
+  previewMovies,
+  savePreviewScreening,
+  useBookingStatus,
+  useScreenings,
+} from './bookingPreview'
 
-const initialScreenings = [
-  {
-    id: 1,
-    title: 'Рататуй',
-    hall: 'Панорамный зал',
-    startsAt: '2026-11-14T14:00',
-    duration: 111,
-  },
-  {
-    id: 2,
-    title: 'Интерстеллар',
-    hall: 'Панорамный зал',
-    startsAt: '2026-11-14T17:00',
-    duration: 169,
-  },
-]
-
-const initialBookings = [
-  {
-    id: 101,
-    viewer: 'Анна Соколова',
-    screeningId: 1,
-    seats: 'Ряд 3 · места 5 и 6',
-    approved: false,
-  },
-]
-
-const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
-  day: 'numeric',
-  month: 'long',
-  hour: '2-digit',
-  minute: '2-digit',
-})
-
-function formatStart(value) {
-  return dateFormatter.format(new Date(value))
-}
-
-function overlaps(first, second) {
-  const firstStart = new Date(first.startsAt).getTime()
-  const secondStart = new Date(second.startsAt).getTime()
-  const cleaningMinutes = 15
-  const firstEnd = firstStart + (first.duration + cleaningMinutes) * 60_000
-  const secondEnd = secondStart + (second.duration + cleaningMinutes) * 60_000
-
-  return firstStart < secondEnd && secondStart < firstEnd
-}
-
-export default function AdminPage() {
-  const [tab, setTab] = useState('screenings')
-  const [screenings, setScreenings] = useState(initialScreenings)
-  const [bookings, setBookings] = useState(initialBookings)
-  const [editingId, setEditingId] = useState(null)
-  const [draftStart, setDraftStart] = useState('')
+function ScreeningForm({ screening, onClose, onSaved }) {
+  const [title, setTitle] = useState(screening?.title ?? previewMovies[0].title)
+  const [hall, setHall] = useState(screening?.hall ?? previewHalls[0])
+  const [startsAt, setStartsAt] = useState(screening?.startsAt ?? '')
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
 
-  function changeTab(nextTab) {
-    setTab(nextTab)
-    setEditingId(null)
-    setError('')
-    setNotice('')
-  }
-
-  function startEditing(screening) {
-    setEditingId(screening.id)
-    setDraftStart(screening.startsAt)
-    setError('')
-    setNotice('')
-  }
-
-  function saveScreening(event, screening) {
+  function submit(event) {
     event.preventDefault()
 
-    const updated = { ...screening, startsAt: draftStart }
-    const conflict = screenings.find((other) =>
-      other.id !== screening.id &&
-      other.hall === screening.hall &&
-      overlaps(updated, other)
-    )
+    const movie = previewMovies.find((item) => item.title === title)
+    const updated = screening
+      ? { ...screening, startsAt }
+      : { id: crypto.randomUUID(), title, hall, startsAt, duration: movie.duration }
 
-    if (conflict) {
-      setError(
-        `В это время зал занят. Проверь сеанс «${conflict.title}» ` +
-        `(${formatStart(conflict.startsAt)}) и оставь 15 минут на уборку.`
-      )
+    const message = savePreviewScreening(updated)
+    if (message) {
+      setError(message)
       return
     }
 
-    setScreenings((current) =>
-      current.map((item) => item.id === screening.id ? updated : item)
-    )
-    setEditingId(null)
-    setError('')
-    setNotice(`Изменения сохранены. «${screening.title}» — ${formatStart(draftStart)}.`)
+    const action = screening ? 'Сеанс перенесён' : 'Сеанс создан'
+    onSaved(`${action}. «${updated.title}» — ${formatStart(startsAt)}.`)
   }
 
-  function approveBooking(id) {
-    setBookings((current) =>
-      current.map((booking) =>
-        booking.id === id ? { ...booking, approved: true } : booking
+  return (
+    <form
+      className="admin-form"
+      onSubmit={submit}
+      onChange={() => setError('')}
+    >
+      {!screening && (
+        <>
+          <label>
+            Фильм
+            <select value={title} onChange={(event) => setTitle(event.target.value)}>
+              {previewMovies.map((movie) => (
+                <option key={movie.title} value={movie.title}>
+                  {movie.title} · {movie.duration} мин
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Зал
+            <select value={hall} onChange={(event) => setHall(event.target.value)}>
+              {previewHalls.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </label>
+        </>
+      )}
+
+      <label>
+        Дата и время начала
+        <input
+          type="datetime-local"
+          value={startsAt}
+          onChange={(event) => setStartsAt(event.target.value)}
+          required
+        />
+      </label>
+
+      {error && <p className="admin-error" role="alert">{error}</p>}
+
+      <div className="admin-actions">
+        <button type="submit" className="button button-primary">
+          {screening ? 'Сохранить' : 'Создать сеанс'}
+        </button>
+        <button type="button" className="button button-outline" onClick={onClose}>
+          Отмена
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function AdminBookingCard({ booking, screening, onNotice }) {
+  const status = useBookingStatus(booking.id)
+  const cancellation = status === 'cancel_requested'
+  const needsReview = status === 'pending' || cancellation
+
+  function confirm() {
+    const nextStatus = cancellation ? 'cancelled' : 'approved'
+    if (changeBookingStatus(booking.id, nextStatus)) {
+      onNotice(cancellation
+        ? `Отмена брони №${booking.id} подтверждена.`
+        : `Бронь №${booking.id} одобрена.`
       )
-    )
-    setNotice(`Бронь №${id} одобрена.`)
+    }
   }
+
+  return (
+    <article className="admin-card">
+      <div className="admin-card-header">
+        <div>
+          <p className="admin-booking-id">Бронь №{booking.id}</p>
+          <h3>{screening.title}</h3>
+        </div>
+        <span className="admin-status">{bookingLabels[status]}</span>
+      </div>
+
+      <p>{booking.viewer}</p>
+      <p className="muted">
+        {formatStart(screening.startsAt)} · {screening.hall}
+      </p>
+      <p>
+        {booking.seats.map((seat) =>
+          `Ряд ${seat.row}, место ${seat.number}`
+        ).join(' · ')}
+      </p>
+
+      {needsReview && (
+        <button type="button" className="button button-primary" onClick={confirm}>
+          {cancellation ? 'Подтвердить отмену' : 'Одобрить бронь'}
+        </button>
+      )}
+    </article>
+  )
+}
+
+export default function AdminPage() {
+  const screenings = useScreenings()
+  const [tab, setTab] = useState('screenings')
+  const [editingId, setEditingId] = useState(null)
+  const [notice, setNotice] = useState('')
+
+  // В текущем предпросмотре одна бронь, общая с кабинетом зрителя.
+  const previewStatus = useBookingStatus(previewBookings[0].id)
+  const awaitingReview =
+    previewStatus === 'pending' || previewStatus === 'cancel_requested'
 
   const orderedScreenings = [...screenings].sort((a, b) =>
     a.startsAt.localeCompare(b.startsAt)
   )
-  const pendingCount = bookings.filter((booking) => !booking.approved).length
+
+  function changeTab(nextTab) {
+    setTab(nextTab)
+    setEditingId(null)
+    setNotice('')
+  }
+
+  function openForm(id) {
+    setNotice('')
+    setEditingId(id)
+  }
+
+  function finishEditing(message) {
+    setEditingId(null)
+    setNotice(message)
+  }
 
   return (
     <main className="container admin-page">
-      <a className="button button-outline" href="/#afisha">
-        ← К афише
-      </a>
+      <a className="button button-outline" href="/#afisha">← К афише</a>
 
       <header className="admin-heading">
         <p className="eyebrow">Кинотеатр «КАДР»</p>
@@ -139,7 +190,7 @@ export default function AdminPage() {
           aria-pressed={tab === 'bookings'}
           onClick={() => changeTab('bookings')}
         >
-          Бронирования{pendingCount > 0 && ` · ${pendingCount} на проверке`}
+          Бронирования{awaitingReview && ' · 1 на проверке'}
         </button>
       </nav>
 
@@ -149,14 +200,30 @@ export default function AdminPage() {
         <section className="admin-section">
           <h2>Расписание сеансов</h2>
 
+          {editingId === 'new' ? (
+            <div className="admin-card">
+              <h3>Новый сеанс</h3>
+              <ScreeningForm
+                onClose={() => setEditingId(null)}
+                onSaved={finishEditing}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => openForm('new')}
+            >
+              Создать сеанс
+            </button>
+          )}
+
           {orderedScreenings.map((screening) => (
             <article className="admin-card" key={screening.id}>
               <div className="admin-card-header">
                 <div>
                   <h3>{screening.title}</h3>
-                  <p className="muted">
-                    {screening.hall} · {screening.duration} мин
-                  </p>
+                  <p className="muted">{screening.hall} · {screening.duration} мин</p>
                   <time dateTime={screening.startsAt}>
                     {formatStart(screening.startsAt)}
                   </time>
@@ -166,7 +233,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     className="button button-outline"
-                    onClick={() => startEditing(screening)}
+                    onClick={() => openForm(screening.id)}
                   >
                     Изменить сеанс
                   </button>
@@ -174,42 +241,11 @@ export default function AdminPage() {
               </div>
 
               {editingId === screening.id && (
-                <form
-                  className="admin-form"
-                  onSubmit={(event) => saveScreening(event, screening)}
-                >
-                  <label>
-                    Дата и время начала
-                    <input
-                      type="datetime-local"
-                      value={draftStart}
-                      required
-                      autoFocus
-                      onChange={(event) => {
-                        setDraftStart(event.target.value)
-                        setError('')
-                      }}
-                    />
-                  </label>
-
-                  {error && <p className="admin-error" role="alert">{error}</p>}
-
-                  <div className="admin-actions">
-                    <button type="submit" className="button button-primary">
-                      Сохранить
-                    </button>
-                    <button
-                      type="button"
-                      className="button button-outline"
-                      onClick={() => {
-                        setEditingId(null)
-                        setError('')
-                      }}
-                    >
-                      Отмена
-                    </button>
-                  </div>
-                </form>
+                <ScreeningForm
+                  screening={screening}
+                  onClose={() => setEditingId(null)}
+                  onSaved={finishEditing}
+                />
               )}
             </article>
           ))}
@@ -218,37 +254,17 @@ export default function AdminPage() {
         <section className="admin-section">
           <h2>Бронирования зрителей</h2>
 
-          {bookings.map((booking) => {
+          {previewBookings.map((booking) => {
             const screening = screenings.find((item) => item.id === booking.screeningId)
+            if (!screening) return null
 
             return (
-              <article className="admin-card" key={booking.id}>
-                <div className="admin-card-header">
-                  <div>
-                    <p className="admin-booking-id">Бронь №{booking.id}</p>
-                    <h3>{screening.title}</h3>
-                  </div>
-                  <span className="admin-status">
-                    {booking.approved ? 'Одобрена' : 'Ожидает одобрения'}
-                  </span>
-                </div>
-
-                <p>{booking.viewer}</p>
-                <p className="muted">
-                  {formatStart(screening.startsAt)} · {screening.hall}
-                </p>
-                <p>{booking.seats}</p>
-
-                {!booking.approved && (
-                  <button
-                    type="button"
-                    className="button button-primary"
-                    onClick={() => approveBooking(booking.id)}
-                  >
-                    Одобрить бронь
-                  </button>
-                )}
-              </article>
+              <AdminBookingCard
+                key={booking.id}
+                booking={booking}
+                screening={screening}
+                onNotice={setNotice}
+              />
             )
           })}
         </section>
