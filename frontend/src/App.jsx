@@ -1,62 +1,51 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import ScreeningPicker from './ScreeningPicker'
 import SeatMap from './SeatMap'
 import AuthDialog from './AuthDialog'
 
-const movies = [
-  {
-    id: 1,
-    title: 'Последний поезд',
-    genre: 'Триллер',
-    age: '16+',
-    duration: '112 мин',
-    poster: 'train',
-    caption: 'У каждого свой путь.',
-  },
-  {
-    id: 2,
-    title: 'Не по плану',
-    genre: 'Комедия',
-    age: '12+',
-    duration: '98 мин',
-    poster: 'comedy',
-    caption: 'Лучшее случается случайно.',
-  },
-  {
-    id: 3,
-    title: 'Письма домой',
-    genre: 'Драма',
-    age: '12+',
-    duration: '106 мин',
-    poster: 'drama',
-    caption: 'Есть вещи, которые нужно сказать.',
-  },
-  {
-    id: 4,
-    title: 'Тихий этаж',
-    genre: 'Триллер',
-    age: '18+',
-    duration: '104 мин',
-    poster: 'thriller',
-    caption: 'Здесь тебя услышат.',
-  },
-]
-
 function App() {
+  const [movies, setMovies] = useState([])
+  const [moviesStatus, setMoviesStatus] = useState('loading')
   const [search, setSearch] = useState('')
   const [genre, setGenre] = useState('Все жанры')
   const [selectedMovie, setSelectedMovie] = useState(null)
   const [activeScreening, setActiveScreening] = useState(null)
   const [showLogin, setShowLogin] = useState(false)
 
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadMovies() {
+      try {
+        const response = await fetch('/api/movies', {
+          signal: controller.signal,
+        })
+
+        if (!response.ok) throw new Error('Не удалось загрузить афишу')
+
+        const data = await response.json()
+        if (!Array.isArray(data)) throw new Error('Ожидался список фильмов')
+
+        setMovies(data)
+        setMoviesStatus('ready')
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          setMoviesStatus('error')
+        }
+      }
+    }
+
+    loadMovies()
+    return () => controller.abort()
+  }, [])
+
+  const genres = [...new Set(movies.map((movie) => movie.genre).filter(Boolean))]
+  const query = search.trim().toLowerCase()
+
   const filteredMovies = movies.filter((movie) => {
-    const matchesSearch = movie.title
-      .toLowerCase()
-      .includes(search.trim().toLowerCase())
-
+    const matchesSearch = movie.title.toLowerCase().includes(query)
     const matchesGenre = genre === 'Все жанры' || movie.genre === genre
-
     return matchesSearch && matchesGenre
   })
 
@@ -135,29 +124,35 @@ function App() {
                 value={genre}
                 onChange={(event) => setGenre(event.target.value)}
               >
-                <option>Все жанры</option>
-                <option>Триллер</option>
-                <option>Комедия</option>
-                <option>Драма</option>
+                <option value="Все жанры">Все жанры</option>
+                {genres.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
               </select>
             </label>
           </div>
 
+          {moviesStatus === 'loading' && <p>Загружаем афишу…</p>}
+          {moviesStatus === 'error' && (
+            <p role="alert">Не удалось загрузить афишу. Попробуй обновить страницу.</p>
+          )}
+
           <div className="movie-grid">
             {filteredMovies.map((movie) => (
               <article className="movie-card" key={movie.id}>
-                <div className={`poster poster-${movie.poster}`}>
-                  <span className="age">{movie.age}</span>
-                  <span className="poster-caption">{movie.caption}</span>
+                <div className={`poster poster-${movie.id % 2 ? 'train' : 'thriller'}`}>
+                  <span className="age">{movie.age_rating}</span>
+                  <span className="poster-caption">{movie.description}</span>
                   <strong className="poster-title">{movie.title}</strong>
                   <span className="poster-label">КАДР / КИНО</span>
                 </div>
 
                 <p className="movie-meta">
-                  {movie.genre} · {movie.duration}
+                  {movie.genre} · {movie.duration_minutes} мин
                 </p>
                 <h3>{movie.title}</h3>
                 <button
+                  type="button"
                   className="button button-outline"
                   onClick={() => setSelectedMovie(movie)}
                 >
@@ -167,11 +162,18 @@ function App() {
             ))}
           </div>
 
-          {filteredMovies.length === 0 && (
+          {moviesStatus === 'ready' && movies.length === 0 && (
+            <div className="empty-state">
+              <h3>В афише пока нет фильмов</h3>
+            </div>
+          )}
+
+          {moviesStatus === 'ready' && movies.length > 0 && filteredMovies.length === 0 && (
             <div className="empty-state">
               <h3>Фильмы не найдены</h3>
               <p>Попробуй другое название или выбери другой жанр.</p>
               <button
+                type="button"
                 className="button button-outline"
                 onClick={() => {
                   setSearch('')
@@ -211,6 +213,7 @@ function App() {
             aria-labelledby="movie-title"
           >
             <button
+              type="button"
               className="close-button"
               aria-label="Закрыть описание фильма"
               autoFocus
@@ -218,18 +221,20 @@ function App() {
             >
               Закрыть ✕
             </button>
+
             <p className="eyebrow">{selectedMovie.genre}</p>
             <h2 id="movie-title">{selectedMovie.title}</h2>
-            <p>{selectedMovie.caption}</p>
+            <p>{selectedMovie.description}</p>
             <p className="muted">
-              {selectedMovie.age} · {selectedMovie.duration}
+              {selectedMovie.age_rating} · {selectedMovie.duration_minutes} мин
             </p>
+
             <ScreeningPicker
               key={selectedMovie.id}
               movieId={selectedMovie.id}
               onSelectScreening={setActiveScreening}
             />
-                    </section>
+          </section>
         </div>
       )}
 
