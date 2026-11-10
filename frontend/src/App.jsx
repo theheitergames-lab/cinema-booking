@@ -3,6 +3,7 @@ import './App.css'
 import ScreeningPicker from './ScreeningPicker'
 import SeatMap from './SeatMap'
 import AuthDialog from './AuthDialog'
+import AccountPage from './AccountPage'
 
 function App() {
   const [movies, setMovies] = useState([])
@@ -48,6 +49,28 @@ function App() {
     const matchesGenre = genre === 'Все жанры' || movie.genre === genre
     return matchesSearch && matchesGenre
   })
+  const preview = new URLSearchParams(window.location.search).get('preview')
+  if (import.meta.env.DEV && (preview === 'account' || preview === 'empty')) {
+    return (
+      <AccountPage
+        preview
+        user={{ name: 'Катя', email: 'viewer@example.test' }}
+        bookings={preview === 'empty' ? [] : [
+          {
+            id: 101,
+            movieTitle: 'Рататуй',
+            startsAt: '2026-11-14T14:00:00',
+            hallName: 'Панорамный зал',
+            statusLabel: 'Ожидает подтверждения',
+            seats: [
+              { row: 3, number: 5 },
+              { row: 3, number: 6 },
+            ],
+          },
+        ]}
+      />
+    )
+  }
 
   return (
     <>

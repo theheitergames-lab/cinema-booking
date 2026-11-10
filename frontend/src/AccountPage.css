@@ -1,0 +1,79 @@
+.account-page {
+  min-height: 100vh;
+  padding-block: 32px 72px;
+}
+
+.account-heading {
+  margin-block: 36px 24px;
+}
+
+.account-heading h1 {
+  margin: 8px 0;
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 1.05;
+}
+
+.account-profile,
+.account-booking,
+.account-empty {
+  max-width: 760px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #17171b;
+}
+
+.account-profile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 64px;
+  overflow-wrap: anywhere;
+}
+
+.account-label {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.account-bookings {
+  margin-top: 40px;
+}
+
+.account-bookings h2 {
+  margin-bottom: 18px;
+}
+
+.account-booking + .account-booking {
+  margin-top: 12px;
+}
+
+.account-booking-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.account-booking h3,
+.account-empty h3 {
+  margin: 12px 0 8px;
+  font-size: 22px;
+}
+
+.account-booking p,
+.account-empty p {
+  margin: 8px 0;
+}
+
+.account-status {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.account-empty .button {
+  margin-top: 12px;
+}
