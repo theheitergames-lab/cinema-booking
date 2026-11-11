@@ -1,9 +1,11 @@
 import datetime
 
 from fastapi import FastAPI, HTTPException
+from psycopg.errors import UniqueViolation
 
 from app.db import get_connection
-from app.schemas import Movie, Screening, Seat
+from app.schemas import Movie, RegisterRequest, Screening, Seat, User
+from app.security import hash_password
 
 app = FastAPI(title="Cinema Booking API")
 
@@ -87,3 +89,23 @@ def list_seats(screening_id: int):
             (screening_id,),
         ).fetchall()
     return seats
+
+@app.post("/auth/register", response_model=User, status_code=201)
+def register(data: RegisterRequest):
+    if len(data.password.encode()) > 72:
+        raise HTTPException(status_code=422, detail="Пароль слишком длинный")
+
+    password_hash = hash_password(data.password)
+    with get_connection() as conn:
+        try:
+            user = conn.execute(
+                """
+                INSERT INTO users (name, email, password_hash)
+                VALUES (%s, %s, %s)
+                RETURNING id, name, email, role
+                """,
+                (data.name, data.email, password_hash),
+            ).fetchone()
+        except UniqueViolation:
+            raise HTTPException(status_code=409, detail="Пользователь с таким email уже существует")
+    return user
