@@ -1,5 +1,5 @@
 .admin-page {
-  max-width: 920px;
+  max-width: 1040px;
   min-height: 100vh;
   padding-block: 32px 72px;
 }
@@ -14,11 +14,14 @@
   line-height: 1.08;
 }
 
+/* Вкладки и действия */
+
 .admin-tabs,
-.admin-actions {
+.admin-actions,
+.admin-dialog-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 
 .admin-tabs {
@@ -27,14 +30,130 @@
 }
 
 .admin-tabs .button[aria-pressed="true"] {
-  border-color: #ed1748;
+  border-color: var(--accent);
   background: #34171f;
-  color: white;
+  color: #fff;
 }
 
-.admin-section h2 {
-  margin: 28px 0 16px;
+.admin-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 28px 0 24px;
 }
+
+.admin-section-heading h2 {
+  margin: 0;
+}
+
+.admin-notice {
+  margin: 0;
+}
+
+.admin-notice:not(:empty) {
+  margin-top: 20px;
+  padding: 14px 18px;
+  border: 1px solid #315744;
+  border-radius: 8px;
+  background: #193126;
+  color: #b7dfc6;
+}
+
+/* Поиск и фильтры */
+
+.admin-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.admin-filters .admin-search {
+  grid-column: 1 / -1;
+}
+
+.admin-filters label,
+.admin-form label {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.admin-filters input,
+.admin-filters select,
+.admin-form input,
+.admin-form select,
+.admin-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #101012;
+  color: #f5f5f6;
+  color-scheme: dark;
+  font: inherit;
+}
+
+.admin-filters input::placeholder,
+.admin-form input::placeholder,
+.admin-form textarea::placeholder {
+  color: #85858f;
+  opacity: 1;
+}
+
+.admin-form textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.admin-form select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.admin-filters input:focus-visible,
+.admin-filters select:focus-visible,
+.admin-form input:focus-visible,
+.admin-form select:focus-visible,
+.admin-form textarea:focus-visible,
+.admin-close:focus-visible,
+.admin-reset:focus-visible,
+.admin-dialog .button:focus-visible,
+.admin-dialog-actions button:focus-visible {
+  outline: 2px solid var(--accent, #ed1745);
+  outline-offset: 3px;
+}
+
+.admin-results {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 18px 0;
+  font-size: 13px;
+}
+
+.admin-reset {
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-reset:hover {
+  color: #fff;
+}
+
+/* Карточки */
 
 .admin-card {
   margin-bottom: 12px;
@@ -42,6 +161,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: #17171b;
+  overflow-wrap: anywhere;
 }
 
 .admin-card-header {
@@ -59,12 +179,20 @@
 
 .admin-card p {
   margin: 8px 0;
+  line-height: 1.6;
 }
 
 .admin-card .admin-booking-id {
   margin: 0 0 6px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.admin-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .admin-status {
@@ -74,45 +202,198 @@
   font-size: 13px;
 }
 
+.admin-status-active {
+  color: #b7dfc6;
+  border-color: #315744;
+  background: #193126;
+}
+
+.admin-status-cancel_requested {
+  color: #e5d7a8;
+  border-color: #625837;
+  background: #302b1d;
+}
+
+.admin-status-cancelled {
+  color: var(--muted);
+  background: #222226;
+}
+
 .admin-card > .button {
   margin-top: 12px;
 }
 
+.admin-page .button:disabled,
+.admin-dialog .button:disabled,
+.admin-dialog-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin-show-more {
+  display: flex;
+  justify-content: center;
+  margin: 24px auto 0;
+}
+
+/* Окна и формы */
+
+.admin-dialog {
+  box-sizing: border-box;
+  width: min(600px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 28px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #19191d;
+  color: #f5f5f6;
+  box-shadow: 0 24px 80px #0006;
+}
+
+.admin-dialog::backdrop {
+  background: #000b;
+}
+
+.admin-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-dialog-heading h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+}
+
+.admin-close {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.admin-close:hover {
+  color: #fff;
+}
+
 .admin-form {
   display: grid;
-  gap: 16px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
+  gap: 18px;
 }
 
-.admin-form label {
+.admin-form-row {
   display: grid;
-  gap: 8px;
-  max-width: 300px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.admin-form input,
-.admin-form select {
-  width: 100%;
-  min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #101012;
-  color: white;
-  color-scheme: dark;
-  font: inherit;
-}
-
-.admin-error {
-  color: #ff9eaf;
-}
-
-.admin-notice {
+.admin-hint,
+.admin-form-hint {
   margin: 0;
+  color: var(--muted, #a0a0aa);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.admin-notice:not(:empty) {
-  margin-top: 16px;
+.admin-error,
+.admin-form-error {
+  margin: 0;
+  color: #ff9eaf;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.admin-dialog > p {
+  margin-block: 12px;
+  line-height: 1.6;
+}
+
+.admin-dialog > .admin-actions {
+  margin-top: 24px;
+}
+
+.admin-dialog-actions {
+  margin-top: 6px;
+}
+
+/* Кнопки внутри окон */
+
+.admin-dialog .button,
+.admin-dialog-actions button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 1px solid var(--border, #34343a);
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-dialog .button:not(:disabled):hover,
+.admin-dialog-actions button:not(:disabled):hover {
+  background: #25252b;
+}
+
+.admin-dialog .button-primary,
+.admin-dialog button[type="submit"] {
+  border-color: var(--accent, #ed1745);
+  background: var(--accent, #ed1745);
+  color: #fff;
+}
+
+.admin-dialog .button-primary:not(:disabled):hover,
+.admin-dialog button[type="submit"]:not(:disabled):hover {
+  border-color: #d8133d;
+  background: #d8133d;
+}
+
+/* Телефоны */
+
+@media (max-width: 600px) {
+  .admin-filters,
+  .admin-form-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-dialog {
+    padding: 22px;
+  }
+
+  .admin-dialog-heading h2 {
+    font-size: 25px;
+  }
+
+  .admin-actions,
+  .admin-dialog-actions {
+    flex-direction: column;
+  }
+
+  .admin-actions .button,
+  .admin-dialog-actions button {
+    width: 100%;
+    justify-content: center;
+  }
 }
