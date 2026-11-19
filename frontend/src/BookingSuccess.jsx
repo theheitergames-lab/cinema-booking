@@ -1,35 +1,54 @@
-export default function BookingSuccess({ movieTitle, screening, seats }) {
-  const date = new Date(screening.startsAt).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-  })
+import { useEffect, useRef } from 'react'
+import './BookingSuccess.css'
+
+export default function BookingSuccess({ onClose, preview = false }) {
+  const dialogRef = useRef(null)
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    dialog.showModal()
+
+    return () => {
+      dialog.close()
+    }
+  }, [])
 
   return (
-    <section className="booking-review" aria-labelledby="booking-success-title">
-      <p className="eyebrow">Бронирование</p>
-      <h2 id="booking-success-title">Заявка на бронь отправлена</h2>
-
-      <p>
-        <strong>Ожидает подтверждения администратора.</strong>
-      </p>
-      <p className="muted">
-        Статус заявки можно посмотреть в личном кабинете.
-      </p>
-
-      <h3>{movieTitle}</h3>
-      <p>
-        {date} · {screening.startsAt.slice(11, 16)} · {screening.hall}
+    <dialog
+      ref={dialogRef}
+      className="booking-success"
+      aria-labelledby="booking-success-title"
+      aria-describedby="booking-success-description"
+      onCancel={(event) => {
+        event.preventDefault()
+        onClose()
+      }}
+    >
+      <p className="eyebrow">
+        {preview ? 'Предпросмотр сообщения' : 'Бронирование'}
       </p>
 
-      <ul>
-        {seats.map((seat) => {
-          const [row, number] = seat.split('-')
+      <h2 id="booking-success-title">Бронирование оформлено</h2>
 
-          return (
-            <li key={seat}>Ряд {row}, место {number}</li>
-          )
-        })}
-      </ul>
-    </section>
+      <p id="booking-success-description" className="muted">
+        Информация о бронировании доступна в личном кабинете,
+        в разделе «Мои бронирования».
+      </p>
+
+      {preview && (
+        <p className="booking-success-preview">
+          Это проверка оформления окна. Бронирование не создавалось.
+        </p>
+      )}
+
+      <button
+        type="button"
+        className="button button-primary"
+        onClick={onClose}
+        autoFocus
+      >
+        Понятно
+      </button>
+    </dialog>
   )
 }

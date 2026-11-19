@@ -1,0 +1,54 @@
+.booking-success {
+  box-sizing: border-box;
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 32px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #19191d;
+  color: #f5f5f6;
+  box-shadow: 0 24px 80px #0006;
+}
+
+.booking-success::backdrop {
+  background: #000b;
+}
+
+.booking-success .eyebrow {
+  margin: 0 0 16px;
+}
+
+.booking-success h2 {
+  margin: 0 0 18px;
+  font-size: clamp(26px, 5vw, 32px);
+  line-height: 1.15;
+  letter-spacing: -0.6px;
+}
+
+.booking-success .muted {
+  margin: 0;
+}
+
+.booking-success-preview {
+  margin: 18px 0 0;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.booking-success .button {
+  width: 100%;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+@media (max-width: 540px) {
+  .booking-success {
+    padding: 24px;
+  }
+}
