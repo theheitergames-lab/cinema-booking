@@ -70,3 +70,7 @@ class BookingListItem(BaseModel):
     starts_at: datetime.datetime
     status: str
     seats: list[BookingSeat]
+
+class BookingStatusResponse(BaseModel):
+    id: int
+    status: str

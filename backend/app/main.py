@@ -9,6 +9,7 @@ from app.schemas import (
     Booking,
     BookingListItem,
     BookingRequest,
+    BookingStatusResponse,
     LoginRequest,
     Movie,
     RegisterRequest,
@@ -261,3 +262,44 @@ def list_bookings(user: dict = Depends(get_current_user)):
         ).fetchall()
 
     return bookings
+
+@app.patch(
+    "/bookings/{booking_id}/cancel",
+    response_model=BookingStatusResponse,
+)
+def cancel_booking(booking_id: int, user: dict = Depends(get_current_user)):
+    with get_connection() as conn:
+        booking = conn.execute(
+            """
+            UPDATE bookings b
+            SET status = 'cancelled'
+            FROM screenings sc
+            WHERE b.id = %s
+              AND b.user_id = %s
+              AND b.status = 'active'
+              AND sc.id = b.screening_id
+              AND sc.starts_at > localtimestamp
+            RETURNING b.id, b.status
+            """,
+            (booking_id, user["id"]),
+        ).fetchone()
+
+        if booking is None:
+            own_booking = conn.execute(
+                """
+                SELECT 1
+                FROM bookings
+                WHERE id = %s AND user_id = %s
+                """,
+                (booking_id, user["id"]),
+            ).fetchone()
+
+            if own_booking is None:
+                raise HTTPException(status_code=404, detail="Бронь не найдена")
+
+            raise HTTPException(
+                status_code=409,
+                detail="Отменить можно только активную бронь до начала сеанса",
+            )
+
+    return booking
