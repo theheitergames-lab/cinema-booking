@@ -13,6 +13,7 @@ const STATUS_LABELS = {
   active: 'Бронь оформлена',
   cancel_requested: 'Ожидает отмены',
   cancelled: 'Бронь отменена',
+  completed: 'Завершена',
 }
 
 function formatStart(value) {
