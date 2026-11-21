@@ -10,6 +10,10 @@ import AuthDialog, {
   AUTH_CHANGED_EVENT,
 } from './AuthDialog'
 
+const FEATURED_TITLE = 'Голодные игры: Рассвет жатвы'
+const FEATURED_IMAGE = '/images/hunger-games-hero.png'
+const FEATURED_RELEASE_DATE = '2026-11-26'
+
 function getToday() {
   const today = new Date()
   const year = today.getFullYear()
@@ -204,10 +208,14 @@ function App() {
   }
 
   const featuredMovie = movies.find(
-    (movie) => movie.title === 'Гарри Поттер и философский камень'
+    (movie) =>
+      movie.title.trim().toLowerCase() ===
+      FEATURED_TITLE.toLowerCase()
   )
 
-  const preview = new URLSearchParams(window.location.search).get('preview')
+  const preview = new URLSearchParams(
+    window.location.search
+  ).get('preview')
 
   if (import.meta.env.DEV && preview === 'admin') {
     return <AdminPage />
@@ -270,13 +278,17 @@ function App() {
             <span>/</span>КАДР
           </a>
 
-          <nav className="navigation" aria-label="Основная навигация">
+          <nav
+            className="navigation"
+            aria-label="Основная навигация"
+          >
             <a
               href="/#afisha"
               onClick={(event) => goToHome(event, 'afisha')}
             >
               Афиша
             </a>
+
             <a
               href="/#about"
               onClick={(event) => goToHome(event, 'about')}
@@ -288,8 +300,12 @@ function App() {
           <button
             type="button"
             className="button button-outline header-login"
-            disabled={!isPersonalPage && authStatus === 'loading'}
-            onClick={isPersonalPage ? logout : openPersonalPage}
+            disabled={
+              !isPersonalPage && authStatus === 'loading'
+            }
+            onClick={
+              isPersonalPage ? logout : openPersonalPage
+            }
           >
             {isPersonalPage ? 'Выйти' : loginLabel}
           </button>
@@ -303,24 +319,37 @@ function App() {
       {isAccountPage ? (
         <AccountPage
           user={user}
-          onGoToAfisha={(event) => goToHome(event, 'afisha')}
+          onGoToAfisha={(event) =>
+            goToHome(event, 'afisha')
+          }
         />
       ) : isAdminPage ? (
         <AdminPage />
       ) : (
         <>
           <main>
-            <section className="hero">
+            <section
+              className="hero"
+              style={{
+                backgroundImage: `linear-gradient(90deg, rgba(0, 0, 0, 0.45), transparent 75%), url("${FEATURED_IMAGE}")`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
               <div className="container hero-inner">
-                <p className="eyebrow">Кинотеатр «КАДР»</p>
+                <p className="eyebrow">
+                  Кинотеатр «КАДР»
+                </p>
 
                 <h1>
-                  Гарри Поттер
+                  Голодные игры
                   <br />
-                  и философский камень
+                  Рассвет жатвы
                 </h1>
 
                 <p className="hero-description">
+                  В кино с 26 ноября 2026
+                  <br />
                   {featuredMovie
                     ? [
                         featuredMovie.genre,
@@ -329,24 +358,37 @@ function App() {
                       ]
                         .filter(Boolean)
                         .join(' · ')
-                    : 'Гарри впервые приезжает в Хогвартс.'}
+                    : 'История Хеймитча Эбернети на 50-х Голодных играх.'}
                 </p>
 
                 <button
                   type="button"
                   className="button button-primary"
                   disabled={!featuredMovie}
-                  onClick={() => setSelectedMovie(featuredMovie)}
+                  onClick={() => {
+                    setSelectedDate((date) =>
+                      [
+                        date || getToday(),
+                        getToday(),
+                        FEATURED_RELEASE_DATE,
+                      ]
+                        .sort()
+                        .at(-1)
+                    )
+                    setSelectedMovie(featuredMovie)
+                  }}
                 >
-                  Выбрать сеанс <span aria-hidden="true">↗</span>
+                  Выбрать сеанс{' '}
+                  <span aria-hidden="true">↗</span>
                 </button>
 
                 <div className="hero-bottom">
-                  <span>Выбери фильм. Найди своё место.</span>
+                  <span>
+                    Выбери фильм. Найди своё место.
+                  </span>
                   <span>01 / КАДР</span>
                 </div>
               </div>
-
             </section>
 
             <Afisha
@@ -362,8 +404,9 @@ function App() {
                 <p className="eyebrow">О кинотеатре</p>
                 <h2>Больше, чем просто просмотр.</h2>
                 <p className="muted">
-                  Большой экран, любимые истории и время для себя.
-                  «КАДР» — место для твоего следующего киновечера.
+                  Большой экран, любимые истории и время
+                  для себя. «КАДР» — место для твоего
+                  следующего киновечера.
                 </p>
               </div>
             </section>
@@ -377,7 +420,11 @@ function App() {
             >
               <span>/</span>КАДР
             </a>
-            <p>Учебный проект · Онлайн-бронирование мест</p>
+
+            <p>
+              Учебный проект · Онлайн-бронирование мест
+            </p>
+
             <a
               href="/#afisha"
               onClick={(event) => goToHome(event, 'afisha')}
@@ -407,9 +454,16 @@ function App() {
                   Закрыть ✕
                 </button>
 
-                <p className="eyebrow">{selectedMovie.genre}</p>
-                <h2 id="movie-title">{selectedMovie.title}</h2>
+                <p className="eyebrow">
+                  {selectedMovie.genre}
+                </p>
+
+                <h2 id="movie-title">
+                  {selectedMovie.title}
+                </h2>
+
                 <p>{selectedMovie.description}</p>
+
                 <p className="muted">
                   {[
                     selectedMovie.age_rating,
@@ -444,7 +498,11 @@ function App() {
                 </button>
 
                 <p className="eyebrow">Выбор мест</p>
-                <h1 id="seat-page-title">{selectedMovie.title}</h1>
+
+                <h1 id="seat-page-title">
+                  {selectedMovie.title}
+                </h1>
+
                 <p className="muted">
                   {new Date(
                     activeScreening.startsAt
