@@ -55,3 +55,18 @@ class Booking(BaseModel):
     created_at: datetime.datetime
     status: str
     seat_ids: list[int]
+
+class BookingSeat(BaseModel):
+    id: int
+    row_number: int
+    seat_number: int
+
+
+class BookingListItem(BaseModel):
+    id: int
+    screening_id: int
+    movie_title: str
+    hall_name: str
+    starts_at: datetime.datetime
+    status: str
+    seats: list[BookingSeat]

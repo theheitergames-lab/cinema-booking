@@ -7,6 +7,7 @@ from psycopg.errors import RaiseException, UniqueViolation
 from app.db import get_connection
 from app.schemas import (
     Booking,
+    BookingListItem,
     BookingRequest,
     LoginRequest,
     Movie,
@@ -220,3 +221,43 @@ def create_booking(data: BookingRequest, user: dict = Depends(get_current_user))
 
     booking["seat_ids"] = data.seat_ids
     return booking
+
+@app.get("/bookings", response_model=list[BookingListItem])
+def list_bookings(user: dict = Depends(get_current_user)):
+    with get_connection() as conn:
+        bookings = conn.execute(
+            """
+            SELECT
+                b.id,
+                b.screening_id,
+                m.title AS movie_title,
+                h.name AS hall_name,
+                sc.starts_at,
+                b.status,
+                COALESCE(
+                    (
+                        SELECT jsonb_agg(
+                            jsonb_build_object(
+                                'id', st.id,
+                                'row_number', st.row_number,
+                                'seat_number', st.seat_number
+                            )
+                            ORDER BY st.row_number, st.seat_number
+                        )
+                        FROM booking_seats bs
+                        JOIN seats st ON st.id = bs.seat_id
+                        WHERE bs.booking_id = b.id
+                    ),
+                    '[]'::jsonb
+                ) AS seats
+            FROM bookings b
+            JOIN screenings sc ON sc.id = b.screening_id
+            JOIN movies m ON m.id = sc.movie_id
+            JOIN halls h ON h.id = sc.hall_id
+            WHERE b.user_id = %s
+            ORDER BY sc.starts_at DESC, b.id DESC
+            """,
+            (user["id"],),
+        ).fetchall()
+
+    return bookings
