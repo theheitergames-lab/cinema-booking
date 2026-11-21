@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react'
 import BookingReview from './BookingReview'
 import './SeatMap.css'
 
-export default function SeatMap({ screening, movieTitle }) {
+export default function SeatMap({
+  screening,
+  movieTitle,
+  user,
+  authStatus,
+  onBook,
+}) {
   const [seats, setSeats] = useState(null)
   const [error, setError] = useState('')
   const [selectedIds, setSelectedIds] = useState([])
@@ -65,9 +71,15 @@ export default function SeatMap({ screening, movieTitle }) {
   if (showReview) {
     return (
       <BookingReview
+        user={user}
+        authStatus={authStatus}
         movieTitle={movieTitle}
         screening={screening}
-        seats={selectedSeats.map(seat => `${seat.row_number}-${seat.seat_number}`)}
+        seats={selectedSeats.map(
+         (seat) => `${seat.row_number}-${seat.seat_number}`
+        )}
+        seatIds={selectedSeats.map((seat) => seat.id)}
+        onBook={onBook}
         onBack={() => setShowReview(false)}
       />
     )

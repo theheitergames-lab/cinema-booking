@@ -520,7 +520,9 @@ function App() {
                   key={activeScreening.id}
                   screening={activeScreening}
                   movieTitle={selectedMovie.title}
-                />
+                  user={user}
+                  authStatus={authStatus}
+                 />
               </div>
             </section>
           )}

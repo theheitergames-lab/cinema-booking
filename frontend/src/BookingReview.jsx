@@ -1,13 +1,29 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import AuthDialog from './AuthDialog'
+import BookingSuccess from './BookingSuccess'
 
 export default function BookingReview({
+  user,
+  authStatus,
   movieTitle,
   screening,
   seats,
+  seatIds = [],
+  onBook,
   onBack,
 }) {
   const [showLogin, setShowLogin] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [bookingCreated, setBookingCreated] = useState(false)
+
+  const submittingRef = useRef(false)
+
+  const checkingAuth = authStatus === 'loading'
+  const authFailed = authStatus === 'error'
+  const isLoggedIn = Boolean(user)
+  const bookingAvailable = typeof onBook === 'function'
 
   const date = new Date(screening.startsAt).toLocaleDateString(
     'ru-RU',
@@ -17,12 +33,72 @@ export default function BookingReview({
     }
   )
 
+  async function handleBooking() {
+    if (
+      submittingRef.current ||
+      checkingAuth ||
+      authFailed ||
+      bookingCreated
+    ) {
+      return
+    }
+
+    setError('')
+
+    if (!isLoggedIn) {
+      setShowLogin(true)
+      return
+    }
+
+    if (!bookingAvailable) return
+
+    if (seatIds.length === 0) {
+      setError('Выберите хотя бы одно место.')
+      return
+    }
+
+    submittingRef.current = true
+    setBusy(true)
+
+    try {
+      // Обработчик должен завершаться успешно только
+      // после подтверждения сохранения брони сервером.
+      await onBook({
+        screeningId: screening.id,
+        seatIds,
+      })
+
+      setBookingCreated(true)
+      setShowSuccess(true)
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Не удалось оформить бронирование. Попробуйте ещё раз.'
+      )
+    } finally {
+      submittingRef.current = false
+      setBusy(false)
+    }
+  }
+
+  const buttonLabel = checkingAuth
+    ? 'Проверяем вход…'
+    : busy
+      ? 'Оформляем…'
+      : bookingCreated
+        ? 'Бронь оформлена'
+        : isLoggedIn
+          ? 'Забронировать'
+          : 'Войти для бронирования'
+
   return (
     <section
       className="booking-review"
       aria-labelledby="booking-title"
     >
       <p className="eyebrow">Оформление бронирования</p>
+
       <h2 id="booking-title">Проверьте выбранные места</h2>
 
       <p>
@@ -46,30 +122,64 @@ export default function BookingReview({
         })}
       </ul>
 
-      <p className="muted">Места ещё не забронированы.</p>
+      <p className="muted">
+        {bookingCreated
+          ? 'Информация о бронировании доступна в личном кабинете.'
+          : 'Места ещё не забронированы.'}
+      </p>
+
+      {authFailed && (
+        <p role="alert">
+          Не удалось проверить вход. Обновите страницу.
+        </p>
+      )}
+
+      {isLoggedIn && !bookingAvailable && !checkingAuth && (
+        <p className="muted">
+          Бронирование временно недоступно. Попробуйте позже.
+        </p>
+      )}
 
       <button
         type="button"
         className="button button-primary"
-        onClick={() => setShowLogin(true)}
+        disabled={
+          checkingAuth ||
+          authFailed ||
+          busy ||
+          bookingCreated ||
+          (isLoggedIn && !bookingAvailable)
+        }
+        onClick={handleBooking}
       >
-        Войти для бронирования
+        {buttonLabel}
       </button>
 
-      {showLogin && (
+      {error && <p role="alert">{error}</p>}
+
+      {!bookingCreated && (
+        <button
+          type="button"
+          className="button button-outline"
+          disabled={busy}
+          onClick={onBack}
+        >
+          ← Изменить места
+        </button>
+      )}
+
+      {showLogin && !isLoggedIn && (
         <AuthDialog
           forBooking
           onClose={() => setShowLogin(false)}
         />
       )}
 
-      <button
-        type="button"
-        className="button button-outline"
-        onClick={onBack}
-      >
-        ← Изменить места
-      </button>
+      {showSuccess && (
+        <BookingSuccess
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </section>
   )
 }
