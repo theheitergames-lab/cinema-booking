@@ -122,7 +122,7 @@ export default function AuthDialog({ forBooking = false, onClose }) {
 
       setMessage(
         error instanceof TypeError
-          ? 'Нет связи с сервером. Проверьте, запущен ли бэкенд.'
+          ? 'Не удалось выполнить запрос. Попробуйте ещё раз.'
           : error.message
       )
     } finally {

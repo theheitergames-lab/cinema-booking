@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import AuthDialog from './AuthDialog'
-import BookingSuccess from './BookingSuccess'
 
 export default function BookingReview({
   movieTitle,
@@ -9,15 +8,20 @@ export default function BookingReview({
   onBack,
 }) {
   const [showLogin, setShowLogin] = useState(false)
-  const [showSuccessPreview, setShowSuccessPreview] = useState(false)
 
-  const date = new Date(screening.startsAt).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-  })
+  const date = new Date(screening.startsAt).toLocaleDateString(
+    'ru-RU',
+    {
+      day: 'numeric',
+      month: 'long',
+    }
+  )
 
   return (
-    <section className="booking-review" aria-labelledby="booking-title">
+    <section
+      className="booking-review"
+      aria-labelledby="booking-title"
+    >
       <p className="eyebrow">Оформление бронирования</p>
       <h2 id="booking-title">Проверьте выбранные места</h2>
 
@@ -26,7 +30,8 @@ export default function BookingReview({
       </p>
 
       <p>
-        {date} · {screening.startsAt.slice(11, 16)} · {screening.hall}
+        {date} · {screening.startsAt.slice(11, 16)} ·{' '}
+        {screening.hall}
       </p>
 
       <ul>
@@ -65,23 +70,6 @@ export default function BookingReview({
       >
         ← Изменить места
       </button>
-
-      {import.meta.env.DEV && (
-        <button
-          type="button"
-          className="button button-outline"
-          onClick={() => setShowSuccessPreview(true)}
-        >
-          Предпросмотр результата
-        </button>
-      )}
-
-      {showSuccessPreview && (
-        <BookingSuccess
-          preview
-          onClose={() => setShowSuccessPreview(false)}
-        />
-      )}
     </section>
   )
 }

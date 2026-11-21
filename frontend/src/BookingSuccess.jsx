@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import './BookingSuccess.css'
 
-export default function BookingSuccess({ onClose, preview = false }) {
+export default function BookingSuccess({ onClose }) {
   const dialogRef = useRef(null)
 
   useEffect(() => {
@@ -24,22 +24,19 @@ export default function BookingSuccess({ onClose, preview = false }) {
         onClose()
       }}
     >
-      <p className="eyebrow">
-        {preview ? 'Предпросмотр сообщения' : 'Бронирование'}
-      </p>
+      <p className="eyebrow">Бронирование</p>
 
-      <h2 id="booking-success-title">Бронирование оформлено</h2>
+      <h2 id="booking-success-title">
+        Бронирование оформлено
+      </h2>
 
-      <p id="booking-success-description" className="muted">
+      <p
+        id="booking-success-description"
+        className="muted"
+      >
         Информация о бронировании доступна в личном кабинете,
         в разделе «Мои бронирования».
       </p>
-
-      {preview && (
-        <p className="booking-success-preview">
-          Это проверка оформления окна. Бронирование не создавалось.
-        </p>
-      )}
 
       <button
         type="button"
