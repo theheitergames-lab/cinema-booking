@@ -2,10 +2,20 @@ import datetime
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from psycopg.errors import UniqueViolation
+from psycopg.errors import RaiseException, UniqueViolation
 
 from app.db import get_connection
-from app.schemas import LoginRequest, Movie, RegisterRequest, Screening, Seat, Token, User
+from app.schemas import (
+    Booking,
+    BookingRequest,
+    LoginRequest,
+    Movie,
+    RegisterRequest,
+    Screening,
+    Seat,
+    Token,
+    User,
+)
 from app.security import create_token, decode_token, hash_password, verify_password
 
 app = FastAPI(title="Cinema Booking API")
@@ -147,3 +157,66 @@ def login(data: LoginRequest):
 @app.get("/auth/me", response_model=User)
 def me(user: dict = Depends(get_current_user)):
     return user
+
+
+@app.post("/bookings", response_model=Booking, status_code=201)
+def create_booking(data: BookingRequest, user: dict = Depends(get_current_user)):
+    if len(data.seat_ids) != len(set(data.seat_ids)):
+        raise HTTPException(status_code=422, detail="Места не должны повторяться")
+    try:
+        with get_connection() as conn:
+            screening = conn.execute(
+                """
+                SELECT id, hall_id, starts_at > localtimestamp AS is_future
+                FROM screenings
+                WHERE id = %s
+                FOR NO KEY UPDATE
+                """,
+                (data.screening_id,),
+            ).fetchone()
+
+            if screening is None:
+                raise HTTPException(status_code=404, detail="Сеанс не найден")
+
+            if not screening["is_future"]:
+                raise HTTPException(status_code=422, detail="Сеанс уже начался")
+
+            seats = conn.execute(
+                """
+                SELECT id
+                FROM seats
+                WHERE hall_id = %s AND id = ANY(%s)
+                """,
+                (screening["hall_id"], data.seat_ids),
+            ).fetchall()
+
+            if len(seats) != len(data.seat_ids):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Одно или несколько мест не найдены в зале этого сеанса",
+                )
+            booking = conn.execute(
+                """
+                INSERT INTO bookings (user_id, screening_id)
+                VALUES (%s, %s)
+                RETURNING id, user_id, screening_id, created_at, status
+                """,
+                (user["id"], data.screening_id),
+            ).fetchone()
+
+            for seat_id in data.seat_ids:
+                conn.execute(
+                    """
+                    INSERT INTO booking_seats (booking_id, seat_id)
+                    VALUES (%s, %s)
+                    """,
+                    (booking["id"], seat_id),
+                )
+    except RaiseException:
+        raise HTTPException(
+            status_code=409,
+            detail="Одно из выбранных мест уже занято",
+        )
+
+    booking["seat_ids"] = data.seat_ids
+    return booking
