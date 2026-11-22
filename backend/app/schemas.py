@@ -33,7 +33,7 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
-    
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -43,3 +43,34 @@ class User(BaseModel):
     name: str
     email: str
     role: str
+
+class BookingRequest(BaseModel):
+    screening_id: int = Field(gt=0)
+    seat_ids: list[int] = Field(min_length=1)
+
+class Booking(BaseModel):
+    id: int
+    user_id: int
+    screening_id: int
+    created_at: datetime.datetime
+    status: str
+    seat_ids: list[int]
+
+class BookingSeat(BaseModel):
+    id: int
+    row_number: int
+    seat_number: int
+
+
+class BookingListItem(BaseModel):
+    id: int
+    screening_id: int
+    movie_title: str
+    hall_name: str
+    starts_at: datetime.datetime
+    status: str
+    seats: list[BookingSeat]
+
+class BookingStatusResponse(BaseModel):
+    id: int
+    status: str
