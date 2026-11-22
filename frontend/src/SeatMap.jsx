@@ -1,18 +1,23 @@
 import { useEffect, useState } from 'react'
 import BookingReview from './BookingReview'
 import './SeatMap.css'
+import {
+  AUTH_TOKEN_KEY,
+  AUTH_CHANGED_EVENT,
+} from './AuthDialog'
 
 export default function SeatMap({
   screening,
   movieTitle,
   user,
   authStatus,
-  onBook,
+  onBookingDone,
 }) {
   const [seats, setSeats] = useState(null)
   const [error, setError] = useState('')
   const [selectedIds, setSelectedIds] = useState([])
   const [showReview, setShowReview] = useState(false)
+  const [reload, setReload] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -42,7 +47,19 @@ export default function SeatMap({
           a.row_number - b.row_number || a.seat_number - b.seat_number
         )
 
-        if (!controller.signal.aborted) setSeats(data)
+        if (!controller.signal.aborted) {
+          const availableIds = new Set(
+            data
+              .filter((seat) => !seat.is_occupied)
+              .map((seat) => seat.id)
+          )
+
+          setSeats(data)
+
+          setSelectedIds((previous) =>
+            previous.filter((id) => availableIds.has(id))
+          )
+        }
       } catch (error) {
         if (!controller.signal.aborted) setError(error.message)
       }
@@ -50,7 +67,68 @@ export default function SeatMap({
 
     loadSeats()
     return () => controller.abort()
-  }, [screening.id])
+  }, [screening.id, reload])
+
+  async function handleBooking({ screeningId, seatIds }) {
+  const token = sessionStorage.getItem(AUTH_TOKEN_KEY)
+
+  if (!token) {
+    throw new Error('Войдите в аккаунт для бронирования.')
+  }
+
+  let response
+
+  try {
+    response = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        screening_id: screeningId,
+        seat_ids: seatIds,
+      }),
+    })
+  } catch {
+    throw new Error(
+      'Соединение прервалось. Проверьте личный кабинет перед повторным бронированием.'
+    )
+  }
+
+  if (response.status === 401) {
+    if (sessionStorage.getItem(AUTH_TOKEN_KEY) === token) {
+      sessionStorage.removeItem(AUTH_TOKEN_KEY)
+      window.dispatchEvent(new Event(AUTH_CHANGED_EVENT))
+    }
+
+    throw new Error('Время входа истекло. Войдите ещё раз.')
+  }
+
+  if (response.status === 409) {
+    throw new Error(
+      'Одно из мест уже занято. Нажмите «Изменить места» и выберите другие.'
+    )
+  }
+
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data?.detail === 'string'
+        ? data.detail
+        : 'Не удалось оформить бронирование. Попробуйте ещё раз.'
+    )
+  }
+
+  if (!data?.id) {
+    throw new Error(
+      'Не удалось прочитать подтверждение. Проверьте личный кабинет перед повторным бронированием.'
+    )
+  }
+
+  return data
+}
 
   function toggleSeat(id) {
     setSelectedIds(previous =>
@@ -76,11 +154,17 @@ export default function SeatMap({
         movieTitle={movieTitle}
         screening={screening}
         seats={selectedSeats.map(
-         (seat) => `${seat.row_number}-${seat.seat_number}`
+          (seat) => `${seat.row_number}-${seat.seat_number}`
         )}
         seatIds={selectedSeats.map((seat) => seat.id)}
-        onBook={onBook}
-        onBack={() => setShowReview(false)}
+        onBook={handleBooking}
+        onBack={() => {
+          setShowReview(false)
+          setSeats(null)
+          setError('')
+          setReload((value) => value + 1)
+        }}
+        onBookingDone={onBookingDone}
       />
     )
   }

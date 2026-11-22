@@ -106,7 +106,10 @@ function App() {
   }, [authRetry])
 
   useEffect(() => {
+    if (page !== 'home') return
+
     const controller = new AbortController()
+    setMoviesStatus('loading')
 
     async function loadMovies() {
       try {
@@ -136,8 +139,9 @@ function App() {
     }
 
     loadMovies()
+
     return () => controller.abort()
-  }, [])
+  }, [page])
 
   useEffect(() => {
     if (page !== 'home' || !scrollTarget) return
@@ -216,39 +220,6 @@ function App() {
   const preview = new URLSearchParams(
     window.location.search
   ).get('preview')
-
-  if (import.meta.env.DEV && preview === 'admin') {
-    return <AdminPage />
-  }
-
-  if (
-    import.meta.env.DEV &&
-    (preview === 'account' || preview === 'empty')
-  ) {
-    return (
-      <AccountPage
-        preview
-        user={{ name: 'Катя', email: 'viewer@example.test' }}
-        bookings={
-          preview === 'empty'
-            ? []
-            : [
-                {
-                  id: 101,
-                  movieTitle: 'Рататуй',
-                  startsAt: '2026-11-14T14:00:00',
-                  hallName: 'Панорамный зал',
-                  statusLabel: 'Ожидает подтверждения',
-                  seats: [
-                    { row: 3, number: 5 },
-                    { row: 3, number: 6 },
-                  ],
-                },
-              ]
-        }
-      />
-    )
-  }
 
   const isAccountPage = Boolean(user && page === 'account')
   const isAdminPage = user?.role === 'admin' && page === 'admin'
@@ -522,7 +493,13 @@ function App() {
                   movieTitle={selectedMovie.title}
                   user={user}
                   authStatus={authStatus}
-                 />
+                  onBookingDone={() => {
+                    setActiveScreening(null)
+                    setSelectedMovie(null)
+                    setPage('home')
+                    setScrollTarget({ id: 'top' })
+                  }}
+                />
               </div>
             </section>
           )}

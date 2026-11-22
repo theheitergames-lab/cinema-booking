@@ -11,12 +11,14 @@ export default function BookingReview({
   seatIds = [],
   onBook,
   onBack,
+  onBookingDone,
 }) {
   const [showLogin, setShowLogin] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [bookingCreated, setBookingCreated] = useState(false)
+  const [savedBooking, setSavedBooking] = useState(null)
 
   const submittingRef = useRef(false)
 
@@ -24,6 +26,19 @@ export default function BookingReview({
   const authFailed = authStatus === 'error'
   const isLoggedIn = Boolean(user)
   const bookingAvailable = typeof onBook === 'function'
+
+  const price =
+    savedBooking?.price_per_seat ?? screening.price
+
+  const hasPrice = Number.isFinite(price) && price >= 0
+
+  const estimatedTotal = hasPrice
+    ? price * seatIds.length
+    : null
+
+  const totalPrice = Number.isFinite(savedBooking?.total_price)
+    ? savedBooking.total_price
+    : estimatedTotal
 
   const date = new Date(screening.startsAt).toLocaleDateString(
     'ru-RU',
@@ -52,6 +67,13 @@ export default function BookingReview({
 
     if (!bookingAvailable) return
 
+    if (!hasPrice) {
+      setError(
+        'Не удалось получить стоимость. Откройте сеанс заново.'
+      )
+      return
+    }
+
     if (seatIds.length === 0) {
       setError('Выберите хотя бы одно место.')
       return
@@ -61,13 +83,12 @@ export default function BookingReview({
     setBusy(true)
 
     try {
-      // Обработчик должен завершаться успешно только
-      // после подтверждения сохранения брони сервером.
-      await onBook({
+      const booking = await onBook({
         screeningId: screening.id,
         seatIds,
       })
 
+      setSavedBooking(booking)
       setBookingCreated(true)
       setShowSuccess(true)
     } catch (error) {
@@ -99,7 +120,9 @@ export default function BookingReview({
     >
       <p className="eyebrow">Оформление бронирования</p>
 
-      <h2 id="booking-title">Проверьте выбранные места</h2>
+      <h2 id="booking-title">
+        Проверьте выбранные места
+      </h2>
 
       <p>
         <strong>{movieTitle}</strong>
@@ -122,11 +145,39 @@ export default function BookingReview({
         })}
       </ul>
 
-      <p className="muted">
-        {bookingCreated
-          ? 'Информация о бронировании доступна в личном кабинете.'
-          : 'Места ещё не забронированы.'}
-      </p>
+      {hasPrice ? (
+        <div className="booking-price">
+          <p>
+            Цена одного места:{' '}
+            {price.toLocaleString('ru-RU')} ₽
+          </p>
+
+          <p>Мест: {seatIds.length}</p>
+
+          <p>
+            <strong>
+              К оплате в кинотеатре:{' '}
+              {totalPrice.toLocaleString('ru-RU')} ₽
+            </strong>
+          </p>
+
+          <p className="muted">
+            Оплата билетов в кинотеатре.
+            Онлайн-оплата не требуется.
+          </p>
+        </div>
+      ) : (
+        <p role="alert">
+          Не удалось получить стоимость.
+          Откройте сеанс заново.
+        </p>
+      )}
+
+      {!bookingCreated && (
+        <p className="muted">
+          Места ещё не забронированы.
+        </p>
+      )}
 
       {authFailed && (
         <p role="alert">
@@ -136,7 +187,8 @@ export default function BookingReview({
 
       {isLoggedIn && !bookingAvailable && !checkingAuth && (
         <p className="muted">
-          Бронирование временно недоступно. Попробуйте позже.
+          Бронирование временно недоступно.
+          Попробуйте позже.
         </p>
       )}
 
@@ -148,6 +200,7 @@ export default function BookingReview({
           authFailed ||
           busy ||
           bookingCreated ||
+          !hasPrice ||
           (isLoggedIn && !bookingAvailable)
         }
         onClick={handleBooking}
@@ -177,7 +230,10 @@ export default function BookingReview({
 
       {showSuccess && (
         <BookingSuccess
-          onClose={() => setShowSuccess(false)}
+          totalPrice={savedBooking?.total_price}
+          onClose={() => {
+            onBookingDone()
+          }}
         />
       )}
     </section>

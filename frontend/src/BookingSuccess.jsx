@@ -1,16 +1,17 @@
 import { useEffect, useRef } from 'react'
 import './BookingSuccess.css'
 
-export default function BookingSuccess({ onClose }) {
+export default function BookingSuccess({
+  onClose,
+  totalPrice,
+}) {
   const dialogRef = useRef(null)
 
   useEffect(() => {
     const dialog = dialogRef.current
     dialog.showModal()
 
-    return () => {
-      dialog.close()
-    }
+    return () => dialog.close()
   }, [])
 
   return (
@@ -37,6 +38,15 @@ export default function BookingSuccess({ onClose }) {
         Информация о бронировании доступна в личном кабинете,
         в разделе «Мои бронирования».
       </p>
+
+      {Number.isFinite(totalPrice) && totalPrice >= 0 && (
+        <p>
+          К оплате в кинотеатре:{' '}
+          <strong>
+            {totalPrice.toLocaleString('ru-RU')} ₽
+          </strong>
+        </p>
+      )}
 
       <button
         type="button"
