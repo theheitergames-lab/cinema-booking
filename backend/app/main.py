@@ -201,7 +201,7 @@ def create_booking(data: BookingRequest, user: dict = Depends(get_current_user))
                 """
                 INSERT INTO bookings (user_id, screening_id)
                 VALUES (%s, %s)
-                RETURNING id, user_id, screening_id, created_at, status
+                RETURNING id, user_id, screening_id, created_at, status, ticket_code
                 """,
                 (user["id"], data.screening_id),
             ).fetchone()
@@ -235,6 +235,7 @@ def list_bookings(user: dict = Depends(get_current_user)):
                 h.name AS hall_name,
                 sc.starts_at,
                 b.status,
+                b.ticket_code,
                 COALESCE(
                     (
                         SELECT jsonb_agg(

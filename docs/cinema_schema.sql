@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Физическая модель данных: ИС онлайн-бронирования мест в кинотеатре
--- СУБД: PostgreSQL 11+
+-- СУБД: PostgreSQL 13+
 -- Запуск: createdb cinema && psql -d cinema -f cinema_schema.sql
 -- =====================================================================
 
@@ -66,6 +66,7 @@ CREATE TABLE bookings (
     user_id      INTEGER     NOT NULL REFERENCES users(id),
     screening_id INTEGER     NOT NULL REFERENCES screenings(id),
     created_at   TIMESTAMP   NOT NULL DEFAULT now(),
+    ticket_code  UUID        NOT NULL DEFAULT gen_random_uuid() UNIQUE,
     status       VARCHAR(20) NOT NULL DEFAULT 'active'
                  CHECK (status IN ('active', 'cancelled', 'completed'))
 );
