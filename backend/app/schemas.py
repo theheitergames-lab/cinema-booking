@@ -1,4 +1,5 @@
 import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -54,6 +55,7 @@ class Booking(BaseModel):
     screening_id: int
     created_at: datetime.datetime
     status: str
+    ticket_code: UUID
     seat_ids: list[int]
 
 class BookingSeat(BaseModel):
@@ -69,6 +71,7 @@ class BookingListItem(BaseModel):
     hall_name: str
     starts_at: datetime.datetime
     status: str
+    ticket_code: UUID
     seats: list[BookingSeat]
 
 class BookingStatusResponse(BaseModel):
