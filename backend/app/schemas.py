@@ -1,7 +1,7 @@
 import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 class Movie(BaseModel):
     id: int
@@ -19,6 +19,7 @@ class Screening(BaseModel):
     hall_name: str
     starts_at: datetime.datetime
     end_at: datetime.datetime
+    price: int
 
 class Seat(BaseModel):
     id: int
@@ -56,7 +57,13 @@ class Booking(BaseModel):
     created_at: datetime.datetime
     status: str
     ticket_code: UUID
+    price_per_seat: int
     seat_ids: list[int]
+
+    @computed_field
+    @property
+    def total_price(self) -> int:
+        return self.price_per_seat * len(self.seat_ids)
 
 class BookingSeat(BaseModel):
     id: int
@@ -70,9 +77,16 @@ class BookingListItem(BaseModel):
     movie_title: str
     hall_name: str
     starts_at: datetime.datetime
+    end_at: datetime.datetime
     status: str
     ticket_code: UUID
+    price_per_seat: int
     seats: list[BookingSeat]
+
+    @computed_field
+    @property
+    def total_price(self) -> int:
+        return self.price_per_seat * len(self.seats)
 
 class BookingStatusResponse(BaseModel):
     id: int
