@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { AUTH_TOKEN_KEY } from './AuthDialog'
 import './AccountPage.css'
+import { QRCodeSVG } from 'qrcode.react'
 
 const PAGE_SIZE = 5
 
@@ -34,88 +36,8 @@ function getBookingGroup(booking, now) {
     : 'past'
 }
 
-// Только для отдельного предпросмотра интерфейса.
-function createPreviewBookings() {
-  function dateAt(offset, hour) {
-    const date = new Date()
-    date.setDate(date.getDate() + offset)
-    date.setHours(hour, 0, 0, 0)
-
-    return date.toISOString()
-  }
-
-  return [
-    {
-      id: 101,
-      movieTitle: 'Гарри Поттер и философский камень',
-      startsAt: dateAt(1, 19),
-      hallName: 'Панорамный зал',
-      status: 'active',
-      seats: [
-        { row: 5, number: 7 },
-        { row: 5, number: 8 },
-      ],
-    },
-    {
-      id: 102,
-      movieTitle: 'Рататуй',
-      startsAt: dateAt(2, 14),
-      hallName: 'Панорамный зал',
-      status: 'active',
-      seats: [{ row: 3, number: 5 }],
-    },
-    {
-      id: 103,
-      movieTitle: 'Интерстеллар',
-      startsAt: dateAt(3, 18),
-      hallName: 'Панорамный зал',
-      status: 'cancel_requested',
-      seats: [{ row: 4, number: 6 }],
-    },
-    {
-      id: 104,
-      movieTitle: 'Начало',
-      startsAt: dateAt(-2, 18),
-      hallName: 'Панорамный зал',
-      status: 'active',
-      seats: [{ row: 2, number: 4 }],
-    },
-    {
-      id: 105,
-      movieTitle: 'ВАЛЛ·И',
-      startsAt: dateAt(4, 16),
-      hallName: 'Панорамный зал',
-      status: 'cancelled',
-      seats: [{ row: 6, number: 7 }],
-    },
-    {
-      id: 106,
-      movieTitle: 'Зверополис',
-      startsAt: dateAt(4, 15),
-      hallName: 'Панорамный зал',
-      status: 'active',
-      seats: [{ row: 3, number: 8 }],
-    },
-    {
-      id: 107,
-      movieTitle: 'Вверх',
-      startsAt: dateAt(5, 17),
-      hallName: 'Панорамный зал',
-      status: 'active',
-      seats: [{ row: 4, number: 9 }],
-    },
-    {
-      id: 108,
-      movieTitle: 'Король Лев',
-      startsAt: dateAt(6, 13),
-      hallName: 'Панорамный зал',
-      status: 'active',
-      seats: [{ row: 2, number: 6 }],
-    },
-  ]
-}
-
 function BookingCard({ booking, group, onRequestCancellation }) {
+  const [showTicket, setShowTicket] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -125,10 +47,16 @@ function BookingCard({ booking, group, onRequestCancellation }) {
     booking.status === 'active' &&
     typeof onRequestCancellation === 'function'
 
-  const statusLabel =
-    STATUS_LABELS[booking.status] ||
-    booking.statusLabel ||
-    'Статус неизвестен'
+  const isPastActive =
+    group === 'past' && booking.status === 'active'
+
+  const displayStatus = isPastActive ? 'past' : booking.status
+
+  const statusLabel = isPastActive
+    ? 'Сеанс прошёл'
+    : STATUS_LABELS[booking.status] ||
+      booking.statusLabel ||
+      'Статус неизвестен'
 
   async function requestCancellation() {
     if (busy) return
@@ -152,13 +80,22 @@ function BookingCard({ booking, group, onRequestCancellation }) {
         <span className="account-label">Бронь №{booking.id}</span>
 
         <span
-          className={`account-status account-status-${booking.status}`}
+          className={`account-status account-status-${displayStatus}`}
         >
           {statusLabel}
         </span>
       </div>
 
       <h3>{booking.movieTitle}</h3>
+
+      {Number.isFinite(booking.totalPrice) && (
+        <p>
+          Стоимость билетов:{' '}
+          <strong>
+            {booking.totalPrice.toLocaleString('ru-RU')} ₽
+          </strong>
+        </p>
+      )}
 
       <p>
         <time dateTime={booking.startsAt}>
@@ -184,6 +121,96 @@ function BookingCard({ booking, group, onRequestCancellation }) {
           До подтверждения отмены места остаются за тобой.
         </p>
       )}
+
+      {booking.ticketCode && (
+        <div className="account-ticket">
+          <button
+            type="button"
+            className="button button-outline"
+            aria-expanded={showTicket}
+            aria-controls={`ticket-${booking.id}`}
+            onClick={() => setShowTicket((value) => !value)}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="6" height="6" />
+              <rect x="15" y="3" width="6" height="6" />
+              <rect x="3" y="15" width="6" height="6" />
+              <path d="M15 15h3v3h3v3h-6v-3M21 12v3M12 3v9H3" />
+            </svg>
+
+            {showTicket ? 'Скрыть QR-код' : 'Показать QR-код'}
+          </button>
+
+          {showTicket && (
+            <div
+              id={`ticket-${booking.id}`}
+              className="account-ticket-details"
+            >
+              <p>
+                <strong>Код бронирования №{booking.id}</strong>
+              </p>
+
+              {booking.status === 'cancelled' ? (
+                <p className="muted">
+                  Бронь отменена. Код сохранён для истории.
+                </p>
+              ) : group === 'past' || booking.status === 'completed' ? (
+                <p className="muted">
+                  Архивное бронирование.
+                </p>
+              ) : (
+                <p className="muted">
+                  Покажите код сотруднику кинотеатра.
+                </p>
+              )}
+
+              <div className="account-ticket-qr">
+                <QRCodeSVG
+                  value={booking.ticketCode}
+                  size={208}
+                  level="M"
+                  marginSize={4}
+                  title={`Код бронирования №${booking.id}`}
+                />
+              </div>
+
+              <code className="account-ticket-code">
+                {booking.ticketCode}
+              </code>
+            </div>
+          )}
+        </div>
+      )}
+
+      {group === 'upcoming' &&
+        booking.status === 'active' &&
+        typeof onRequestCancellation !== 'function' && (
+          <div className="account-cancel">
+            <button
+              type="button"
+              className="button button-outline"
+              disabled
+              aria-describedby={`cancel-unavailable-${booking.id}`}
+            >
+              Запросить отмену
+            </button>
+
+            <p
+              id={`cancel-unavailable-${booking.id}`}
+              className="muted"
+            >
+              Запрос отмены временно недоступен.
+            </p>
+          </div>
+        )}
 
       {canCancel && (
         confirming ? (
@@ -231,23 +258,99 @@ function BookingCard({ booking, group, onRequestCancellation }) {
 
 export default function AccountPage({
   user,
-  bookings = null,
-  preview = false,
   onRequestCancellation,
   onGoToAfisha,
 }) {
   const [filter, setFilter] = useState('upcoming')
   const [search, setSearch] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [serverBookings, setServerBookings] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [retry, setRetry] = useState(0)
 
-  const [demoBookings, setDemoBookings] = useState(() => {
-    if (!preview || bookings?.length === 0) return []
-    return createPreviewBookings()
-  })
+  useEffect(() => {
+    const controller = new AbortController()
 
-  const source = preview ? demoBookings : bookings
-  const bookingsAvailable = Array.isArray(source)
-  const allBookings = bookingsAvailable ? source : []
+    setLoading(true)
+    setLoadError('')
+    setServerBookings(null)
+
+    async function loadBookings() {
+      try {
+        const token = sessionStorage.getItem(AUTH_TOKEN_KEY)
+
+        if (!token) {
+          throw new Error('Войдите в аккаунт для просмотра бронирований.')
+        }
+
+        const response = await fetch('/api/bookings', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        })
+
+        if (response.status === 401) {
+          throw new Error('Время входа истекло. Выйдите и войдите снова.')
+        }
+
+        if (!response.ok) {
+          throw new Error('Не удалось загрузить бронирования.')
+        }
+
+        const data = await response.json()
+
+        if (
+          !Array.isArray(data) ||
+          !data.every((booking) =>
+            booking.id != null &&
+            typeof booking.movie_title === 'string' &&
+            Array.isArray(booking.seats)
+          )
+        ) {
+          throw new Error('Не удалось прочитать список бронирований.')
+        }
+
+        const preparedBookings = data.map((booking) => ({
+          id: booking.id,
+          totalPrice: booking.total_price,
+          movieTitle: booking.movie_title,
+          startsAt: booking.starts_at,
+          hallName: booking.hall_name,
+          status: booking.status,
+          ticketCode: booking.ticket_code,
+          seats: booking.seats.map((seat) => ({
+            row: seat.row_number,
+            number: seat.seat_number,
+          })),
+        }))
+
+        if (!controller.signal.aborted) {
+          setServerBookings(preparedBookings)
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setLoadError(
+            error instanceof TypeError
+              ? 'Не удалось связаться с сервером. Попробуйте ещё раз.'
+              : error.message
+          )
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadBookings()
+
+    return () => controller.abort()
+  }, [user.id, retry])
+
+  const bookingsAvailable = Array.isArray(serverBookings)
+  const allBookings = bookingsAvailable ? serverBookings : []
 
   const now = Date.now()
   const query = search.trim().toLowerCase()
@@ -280,33 +383,12 @@ export default function AccountPage({
     setVisibleCount(PAGE_SIZE)
   }
 
-  function requestPreviewCancellation(id) {
-    setDemoBookings((current) =>
-      current.map((booking) =>
-        booking.id === id
-          ? { ...booking, status: 'cancel_requested' }
-          : booking
-      )
-    )
-  }
-
-  const cancellationHandler = preview
-    ? requestPreviewCancellation
-    : onRequestCancellation
-
   return (
     <main className="account-page">
       <div className="container">
         <header className="account-heading">
           <p className="eyebrow">Кинотеатр «КАДР»</p>
           <h1>Личный кабинет</h1>
-
-          {preview && (
-            <p className="muted">
-              Предпросмотр · тестовые данные.
-              Изменения не отправляются на сервер.
-            </p>
-          )}
         </header>
 
         <section className="account-profile" aria-label="Данные профиля">
@@ -328,11 +410,24 @@ export default function AccountPage({
           <h2 id="account-bookings-title">Мои бронирования</h2>
 
           {!bookingsAvailable ? (
-            <div className="account-empty" role="status">
-              <h3>Бронирования пока недоступны</h3>
-              <p className="muted">
-                Сейчас мы не можем показать список твоих бронирований.
-              </p>
+            <div className="account-empty">
+              {loading ? (
+                <p role="status">Загружаем бронирования…</p>
+              ) : (
+                <>
+                  <p role="alert">
+                    {loadError || 'Не удалось загрузить бронирования.'}
+                  </p>
+
+                  <button
+                    type="button"
+                    className="button button-outline"
+                    onClick={() => setRetry((value) => value + 1)}
+                  >
+                    Повторить
+                  </button>
+                </>
+              )}
             </div>
           ) : allBookings.length === 0 ? (
             <div className="account-empty">
@@ -414,7 +509,7 @@ export default function AccountPage({
                       key={booking.id}
                       booking={booking}
                       group={getBookingGroup(booking, now)}
-                      onRequestCancellation={cancellationHandler}
+                      onRequestCancellation={onRequestCancellation}
                     />
                   ))}
                 </div>

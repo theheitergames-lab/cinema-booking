@@ -246,3 +246,53 @@
     justify-content: center;
   }
 }
+
+.account-status-past {
+  color: #b8b8bf;
+  background: transparent;
+  border-color: #343439;
+}
+
+.account-ticket {
+  margin-top: 18px;
+}
+
+.account-ticket > .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-ticket-details {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #343439;
+  border-radius: 12px;
+}
+
+.account-ticket-qr {
+  width: fit-content;
+  max-width: 100%;
+  margin: 16px 0;
+  padding: 8px;
+  background: #fff;
+  border-radius: 10px;
+}
+
+.account-ticket-qr svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.account-ticket-code {
+  display: block;
+  color: #b8b8bf;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.account-cancel .button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
