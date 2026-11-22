@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Физическая модель данных: ИС онлайн-бронирования мест в кинотеатре
--- СУБД: PostgreSQL 11+
+-- СУБД: PostgreSQL 13+
 -- Запуск: createdb cinema && psql -d cinema -f cinema_schema.sql
 -- =====================================================================
 
@@ -8,6 +8,7 @@
 DROP TABLE IF EXISTS booking_seats, bookings, screenings, seats, halls, movies, users CASCADE;
 DROP FUNCTION IF EXISTS check_seat_free() CASCADE;
 DROP FUNCTION IF EXISTS check_booking_status() CASCADE;
+DROP FUNCTION IF EXISTS set_booking_price() CASCADE;
 
 -- ---------- Пользователи ----------
 -- гость после регистрации становится viewer, admin заводится вручную
@@ -56,6 +57,7 @@ CREATE TABLE screenings (
     hall_id   INTEGER   NOT NULL REFERENCES halls(id),
     starts_at TIMESTAMP NOT NULL,
     end_at    TIMESTAMP NOT NULL,
+    price     INTEGER   NOT NULL DEFAULT 350 CHECK (price >= 0),
     CHECK (end_at > starts_at)
 );
 -- пересечение сеансов в одном зале проверяет backend
@@ -66,6 +68,8 @@ CREATE TABLE bookings (
     user_id      INTEGER     NOT NULL REFERENCES users(id),
     screening_id INTEGER     NOT NULL REFERENCES screenings(id),
     created_at   TIMESTAMP   NOT NULL DEFAULT now(),
+    ticket_code  UUID        NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+    price_per_seat INTEGER   NOT NULL CHECK (price_per_seat >= 0),
     status       VARCHAR(20) NOT NULL DEFAULT 'active'
                  CHECK (status IN ('active', 'cancelled', 'completed'))
 );
@@ -85,6 +89,18 @@ CREATE INDEX idx_bookings_user      ON bookings(user_id);
 CREATE INDEX idx_bookings_screening ON bookings(screening_id);
 CREATE INDEX idx_booking_seats_seat ON booking_seats(seat_id);
 
+
+-- Цена билета фиксируется в момент бронирования.
+CREATE FUNCTION set_booking_price() RETURNS trigger AS $$
+BEGIN
+    SELECT price INTO NEW.price_per_seat FROM screenings WHERE id = NEW.screening_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_set_booking_price
+BEFORE INSERT ON bookings
+FOR EACH ROW EXECUTE FUNCTION set_booking_price();
 
 -- ---------- Защита от двойного бронирования ----------
 -- нельзя добавить место, если оно уже в активной брони на этот же сеанс,

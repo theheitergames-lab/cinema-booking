@@ -1,48 +1,58 @@
 import datetime
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from psycopg.errors import UniqueViolation
+from psycopg.errors import RaiseException, UniqueViolation
 
+from app import admin_bookings, admin_catalog, admin_screenings
+from app.auth import get_current_user
+from app.booking_details import BOOKING_DETAILS
 from app.db import get_connection
-from app.schemas import LoginRequest, Movie, RegisterRequest, Screening, Seat, Token, User
-from app.security import create_token, decode_token, hash_password, verify_password
+from app.schemas import (
+    Booking,
+    BookingListItem,
+    BookingRequest,
+    BookingStatusResponse,
+    LoginRequest,
+    Movie,
+    RegisterRequest,
+    Screening,
+    Seat,
+    Token,
+    User,
+)
+from app.security import create_token, hash_password, verify_password
 
 app = FastAPI(title="Cinema Booking API")
-bearer = HTTPBearer(auto_error=False)
-
-def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)):
-    if credentials is None:
-        raise HTTPException(status_code=401, detail="Нужно войти")
-
-    user_id = decode_token(credentials.credentials)
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Токен недействителен или истёк")
-
-    with get_connection() as conn:
-        user = conn.execute(
-            "SELECT id, name, email, role FROM users WHERE id = %s",
-            (user_id,),
-        ).fetchone()
-
-    if user is None:
-        raise HTTPException(status_code=401, detail="Пользователь не найден")
-    return user
+for router in (admin_bookings.router, admin_catalog.router, admin_screenings.router):
+    app.include_router(router, responses={
+        401: {"description": "Нужно войти"},
+        403: {"description": "Нужны права администратора"},
+        404: {"description": "Запись не найдена"},
+        409: {"description": "Действие конфликтует с текущим состоянием"},
+    })
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 @app.get("/movies", response_model=list[Movie])
-def list_movies():
+def list_movies(date: datetime.date | None = None, genre: str | None = None):
     with get_connection() as conn:
         movies = conn.execute(
             """
             SELECT id, title, description, duration_minutes,
                    age_rating, genre, poster_path
-            FROM movies
-            ORDER BY title
-            """
+            FROM movies m
+            WHERE (%(genre)s::text IS NULL OR lower(m.genre) = lower(%(genre)s))
+              AND (%(date)s::date IS NULL OR EXISTS (
+                  SELECT 1 FROM screenings s
+                  WHERE s.movie_id = m.id
+                    AND s.starts_at::date = %(date)s
+                    AND s.starts_at > localtimestamp
+              ))
+            ORDER BY title, id
+            """,
+            {"date": date, "genre": genre},
         ).fetchall()
     return movies
 
@@ -68,7 +78,7 @@ def list_screenings(movie_id: int, date: datetime.date):
         screenings = conn.execute(
             """
             SELECT s.id, s.movie_id, s.hall_id, h.name AS hall_name,
-                   s.starts_at, s.end_at
+                   s.starts_at, s.end_at, s.price
             FROM screenings s
             JOIN halls h ON h.id = s.hall_id
             WHERE s.movie_id = %s
@@ -147,3 +157,132 @@ def login(data: LoginRequest):
 @app.get("/auth/me", response_model=User)
 def me(user: dict = Depends(get_current_user)):
     return user
+
+
+@app.post(
+    "/bookings", response_model=Booking, status_code=201,
+    responses={
+        401: {"description": "Нужно войти"},
+        404: {"description": "Сеанс не найден"},
+        409: {"description": "Одно из выбранных мест уже занято"},
+    },
+)
+def create_booking(data: BookingRequest, user: dict = Depends(get_current_user)):
+    if len(data.seat_ids) != len(set(data.seat_ids)):
+        raise HTTPException(status_code=422, detail="Места не должны повторяться")
+    try:
+        with get_connection() as conn:
+            screening = conn.execute(
+                """
+                SELECT id, hall_id, starts_at > localtimestamp AS is_future
+                FROM screenings
+                WHERE id = %s
+                FOR NO KEY UPDATE
+                """,
+                (data.screening_id,),
+            ).fetchone()
+
+            if screening is None:
+                raise HTTPException(status_code=404, detail="Сеанс не найден")
+
+            if not screening["is_future"]:
+                raise HTTPException(status_code=422, detail="Сеанс уже начался")
+
+            seats = conn.execute(
+                """
+                SELECT id
+                FROM seats
+                WHERE hall_id = %s AND id = ANY(%s)
+                """,
+                (screening["hall_id"], data.seat_ids),
+            ).fetchall()
+
+            if len(seats) != len(data.seat_ids):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Одно или несколько мест не найдены в зале этого сеанса",
+                )
+            booking = conn.execute(
+                """
+                INSERT INTO bookings (user_id, screening_id)
+                VALUES (%s, %s)
+                RETURNING id, user_id, screening_id, created_at, status, ticket_code, price_per_seat
+                """,
+                (user["id"], data.screening_id),
+            ).fetchone()
+
+            for seat_id in data.seat_ids:
+                conn.execute(
+                    """
+                    INSERT INTO booking_seats (booking_id, seat_id)
+                    VALUES (%s, %s)
+                    """,
+                    (booking["id"], seat_id),
+                )
+    except RaiseException:
+        raise HTTPException(
+            status_code=409,
+            detail="Одно из выбранных мест уже занято",
+        )
+
+    booking["seat_ids"] = data.seat_ids
+    return booking
+
+@app.get("/bookings", response_model=list[BookingListItem])
+def list_bookings(user: dict = Depends(get_current_user)):
+    with get_connection() as conn:
+        bookings = conn.execute(
+            BOOKING_DETAILS + """
+            WHERE b.user_id = %s
+            ORDER BY sc.starts_at DESC, b.id DESC
+            """,
+            (user["id"],),
+        ).fetchall()
+
+    return bookings
+
+@app.patch(
+    "/bookings/{booking_id}/cancel",
+    response_model=BookingStatusResponse,
+    responses={
+        401: {"description": "Нужно войти"},
+        404: {"description": "Бронь не найдена"},
+        409: {"description": "Бронь уже закрыта или сеанс начался"},
+    },
+)
+def cancel_booking(booking_id: int, user: dict = Depends(get_current_user)):
+    with get_connection() as conn:
+        booking = conn.execute(
+            """
+            UPDATE bookings b
+            SET status = 'cancelled'
+            FROM screenings sc
+            WHERE b.id = %s
+              AND b.user_id = %s
+              AND b.status = 'active'
+              AND sc.id = b.screening_id
+              AND sc.starts_at > localtimestamp
+            RETURNING b.id, b.status
+            """,
+            (booking_id, user["id"]),
+        ).fetchone()
+
+        if booking is None:
+            own_booking = conn.execute(
+                """
+                SELECT 1
+                FROM bookings
+                WHERE id = %s AND user_id = %s
+                """,
+                (booking_id, user["id"]),
+            ).fetchone()
+
+            if own_booking is None:
+                raise HTTPException(status_code=404, detail="Бронь не найдена")
+
+            raise HTTPException(
+                status_code=409,
+                detail="Отменить можно только активную бронь до начала сеанса",
+            )
+
+    return booking
