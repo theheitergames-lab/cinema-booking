@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import {
+  AUTH_TOKEN_KEY,
+  AUTH_CHANGED_EVENT,
+} from './AuthDialog'
 import './AdminPage.css'
 
 const PAGE_SIZE = 5
@@ -7,16 +11,7 @@ const STATUS_LABELS = {
   active: 'Активная',
   cancel_requested: 'Ожидает отмены',
   cancelled: 'Отменена',
-}
-
-function localDateTime(date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`
+  completed: 'Завершена',
 }
 
 function formatStart(value) {
@@ -28,118 +23,42 @@ function formatStart(value) {
   })
 }
 
-function createDemoData() {
-  function tomorrowAt(hour) {
-    const date = new Date()
-    date.setDate(date.getDate() + 1)
-    date.setHours(hour, 0, 0, 0)
-    return localDateTime(date)
-  }
-
-  return {
-    movies: [
-      {
-        id: 'movie-1',
-        title: 'Рататуй',
-        description: 'История маленького повара с большой мечтой.',
-        genre: 'Мультфильм',
-        duration_minutes: 111,
-        age_rating: '6+',
-        poster_path: '/images/ratatouille.jpg',
-      },
-      {
-        id: 'movie-2',
-        title: 'Интерстеллар',
-        description: 'Экспедиция ищет новый дом для человечества.',
-        genre: 'Фантастика',
-        duration_minutes: 169,
-        age_rating: '12+',
-        poster_path: '',
-      },
-    ],
-    halls: [
-      { id: 'hall-1', name: 'Панорамный зал' },
-      { id: 'hall-2', name: 'Малый зал' },
-    ],
-    screenings: [
-      {
-        id: 'screening-1',
-        movieId: 'movie-1',
-        hallId: 'hall-1',
-        startsAt: tomorrowAt(14),
-      },
-      {
-        id: 'screening-2',
-        movieId: 'movie-2',
-        hallId: 'hall-1',
-        startsAt: tomorrowAt(18),
-      },
-    ],
-    bookings: [
-      {
-        id: 101,
-        screeningId: 'screening-1',
-        viewer: 'Иван Петров',
-        email: 'ivan@example.test',
-        status: 'active',
-        seats: [{ row: 3, number: 5 }],
-      },
-      {
-        id: 102,
-        screeningId: 'screening-2',
-        viewer: 'Мария Иванова',
-        email: 'maria@example.test',
-        status: 'cancel_requested',
-        seats: [
-          { row: 4, number: 6 },
-          { row: 4, number: 7 },
-        ],
-      },
-      {
-        id: 103,
-        screeningId: 'screening-1',
-        viewer: 'Анна Смирнова',
-        email: 'anna@example.test',
-        status: 'cancelled',
-        seats: [{ row: 2, number: 8 }],
-      },
-    ],
-  }
-}
-
-function findConflict(screenings, movies) {
-  const intervals = screenings.map((screening) => {
-    const movie = movies.find((item) => item.id === screening.movieId)
-    const start = new Date(screening.startsAt).getTime()
-
-    return {
-      ...screening,
-      title: movie.title,
-      start,
-      end: start + movie.duration_minutes * 60_000,
-    }
+async function adminRequest(path, options = {}) {
+  const response = await fetch(`/api/admin/${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${
+        sessionStorage.getItem(AUTH_TOKEN_KEY) || ''
+      }`,
+    },
   })
 
-  for (let first = 0; first < intervals.length; first += 1) {
-    for (let second = first + 1; second < intervals.length; second += 1) {
-      const a = intervals[first]
-      const b = intervals[second]
-
-      if (
-        a.hallId === b.hallId &&
-        a.start < b.end &&
-        b.start < a.end
-      ) {
-        return (
-          'В одном зале пересекаются сеансы: ' +
-          `«${a.title}» (${formatStart(a.startsAt)}) и ` +
-          `«${b.title}» (${formatStart(b.startsAt)}).`
-        )
-      }
-    }
+  if (response.status === 401) {
+    sessionStorage.removeItem(AUTH_TOKEN_KEY)
+    window.dispatchEvent(new Event(AUTH_CHANGED_EVENT))
+    throw new Error('Войди в аккаунт заново.')
   }
 
-  return ''
+  if (response.status === 204) return null
+
+  const result = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    const detail = result?.detail
+
+    throw new Error(
+      response.status >= 500
+        ? 'Не удалось выполнить действие. Попробуй позже.'
+        : typeof detail === 'string'
+          ? detail
+          : response.status === 422
+            ? 'Проверь заполненные поля.'
+            : 'Не удалось выполнить действие.'
+    )
+  }
+
+  return result
 }
 
 function AdminDialog({ title, onClose, children }) {
@@ -180,60 +99,83 @@ function AdminDialog({ title, onClose, children }) {
   )
 }
 
-function MovieForm({ movie, genres = [], onSave, onClose }) {
-  const genreOptions = [...new Set(
-    [...genres, movie?.genre]
-      .filter(Boolean)
-      .map((genre) => genre.trim())
-      .filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b, 'ru'));
+function MovieForm({
+  movie,
+  genres = [],
+  onSave,
+  onClose,
+  busy,
+}) {
+  const genreOptions = [
+    ...new Set(
+      [...genres, movie?.genre]
+        .filter(Boolean)
+        .map((genre) => genre.trim())
+        .filter(Boolean)
+    ),
+  ].sort((a, b) => a.localeCompare(b, 'ru'))
 
-  const [selectedGenre, setSelectedGenre] = useState(movie?.genre?.trim() || '');
-  const [customGenre, setCustomGenre] = useState('');
-  const [error, setError] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState(
+    movie?.genre?.trim() || ''
+  )
+  const [customGenre, setCustomGenre] = useState('')
+  const [error, setError] = useState('')
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    setError('');
+  async function handleSubmit(event) {
+    event.preventDefault()
+    setError('')
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(event.currentTarget)
+
     const enteredGenre =
       selectedGenre === '__custom__'
         ? customGenre.trim()
-        : selectedGenre;
+        : selectedGenre
 
     const existingGenre = genreOptions.find(
       (genre) =>
         genre.toLocaleLowerCase('ru') ===
         enteredGenre.toLocaleLowerCase('ru')
-    );
+    )
 
     const data = {
       id: movie?.id ?? crypto.randomUUID(),
       title: String(formData.get('title') || '').trim(),
-      description: String(formData.get('description') || '').trim(),
+      description: String(
+        formData.get('description') || ''
+      ).trim(),
       genre: existingGenre || enteredGenre,
-      duration_minutes: Number(formData.get('duration_minutes')),
+      duration_minutes: Number(
+        formData.get('duration_minutes')
+      ),
       age_rating: String(formData.get('age_rating') || ''),
-      poster_path: String(formData.get('poster_path') || '').trim(),
-    };
+      poster_path: String(
+        formData.get('poster_path') || ''
+      ).trim(),
+    }
 
     if (!data.title || !data.description || !data.genre) {
-      setError('Заполни название, описание и жанр фильма.');
-      return;
+      setError('Заполни название, описание и жанр фильма.')
+      return
     }
 
     if (
       !Number.isInteger(data.duration_minutes) ||
       data.duration_minutes <= 0
     ) {
-      setError('Продолжительность должна быть целым числом больше нуля.');
-      return;
+      setError(
+        'Продолжительность должна быть целым числом больше нуля.'
+      )
+      return
     }
 
-    if (!['0+', '6+', '12+', '16+', '18+'].includes(data.age_rating)) {
-      setError('Выбери возрастное ограничение.');
-      return;
+    if (
+      !['0+', '6+', '12+', '16+', '18+'].includes(
+        data.age_rating
+      )
+    ) {
+      setError('Выбери возрастное ограничение.')
+      return
     }
 
     if (
@@ -242,15 +184,13 @@ function MovieForm({ movie, genres = [], onSave, onClose }) {
     ) {
       setError(
         'Укажи путь вида /images/poster.jpg или ссылку, начинающуюся с https://.'
-      );
-      return;
+      )
+      return
     }
 
-    const saveError = onSave(data);
+    const saveError = await onSave(data)
 
-    if (saveError) {
-      setError(saveError);
-    }
+    if (saveError) setError(saveError)
   }
 
   return (
@@ -281,8 +221,8 @@ function MovieForm({ movie, genres = [], onSave, onClose }) {
           <select
             value={selectedGenre}
             onChange={(event) => {
-              setSelectedGenre(event.target.value);
-              setError('');
+              setSelectedGenre(event.target.value)
+              setError('')
             }}
             required
           >
@@ -296,7 +236,9 @@ function MovieForm({ movie, genres = [], onSave, onClose }) {
               </option>
             ))}
 
-            <option value="__custom__">Другой жанр…</option>
+            <option value="__custom__">
+              Другой жанр…
+            </option>
           </select>
         </label>
 
@@ -318,7 +260,9 @@ function MovieForm({ movie, genres = [], onSave, onClose }) {
           Новый жанр
           <input
             value={customGenre}
-            onChange={(event) => setCustomGenre(event.target.value)}
+            onChange={(event) =>
+              setCustomGenre(event.target.value)
+            }
             placeholder="Например, Детектив"
             required
           />
@@ -363,7 +307,11 @@ function MovieForm({ movie, genres = [], onSave, onClose }) {
       )}
 
       <div className="admin-dialog-actions">
-        <button type="submit" className="button button-primary">
+        <button
+          type="submit"
+          className="button button-primary"
+          disabled={busy}
+        >
           {movie ? 'Сохранить изменения' : 'Добавить фильм'}
         </button>
 
@@ -376,7 +324,7 @@ function MovieForm({ movie, genres = [], onSave, onClose }) {
         </button>
       </div>
     </form>
-  );
+  )
 }
 
 function ScreeningForm({
@@ -385,10 +333,11 @@ function ScreeningForm({
   halls,
   onSave,
   onClose,
+  busy,
 }) {
   const [error, setError] = useState('')
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault()
     setError('')
 
@@ -408,11 +357,9 @@ function ScreeningForm({
       return
     }
 
-    const message = onSave(data)
+    const message = await onSave(data)
 
-    if (message) {
-      setError(message)
-    }
+    if (message) setError(message)
   }
 
   return (
@@ -421,7 +368,9 @@ function ScreeningForm({
         Фильм
         <select
           name="movie"
-          defaultValue={screening?.movieId ?? movies[0]?.id ?? ''}
+          defaultValue={
+            screening?.movieId ?? movies[0]?.id ?? ''
+          }
           disabled={Boolean(screening)}
           required
         >
@@ -437,7 +386,9 @@ function ScreeningForm({
         Зал
         <select
           name="hall"
-          defaultValue={screening?.hallId ?? halls[0]?.id ?? ''}
+          defaultValue={
+            screening?.hallId ?? halls[0]?.id ?? ''
+          }
           disabled={Boolean(screening)}
           required
         >
@@ -473,7 +424,11 @@ function ScreeningForm({
       )}
 
       <div className="admin-actions">
-        <button type="submit" className="button button-primary">
+        <button
+          type="submit"
+          className="button button-primary"
+          disabled={busy}
+        >
           {screening ? 'Сохранить' : 'Создать сеанс'}
         </button>
 
@@ -490,7 +445,19 @@ function ScreeningForm({
 }
 
 export default function AdminPage() {
-  const [data, setData] = useState(createDemoData)
+  const [data, setData] = useState({
+    movies: [],
+    halls: [],
+    screenings: [],
+    bookings: [],
+  })
+
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [retry, setRetry] = useState(0)
+  const [busy, setBusy] = useState(false)
+  const saving = useRef(false)
+
   const [tab, setTab] = useState('movies')
   const [modal, setModal] = useState(null)
   const [notice, setNotice] = useState('')
@@ -501,66 +468,141 @@ export default function AdminPage() {
   const [status, setStatus] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function load() {
+      setLoading(true)
+      setLoadError('')
+
+      try {
+        const [movies, halls, screenings, bookings] =
+          await Promise.all(
+            ['movies', 'halls', 'screenings', 'bookings'].map(
+              (path) =>
+                adminRequest(path, {
+                  signal: controller.signal,
+                })
+            )
+          )
+
+        if (controller.signal.aborted) return
+
+        setData({
+          movies: movies.map((movie) => ({
+            ...movie,
+            id: String(movie.id),
+          })),
+
+          halls: halls.map((hall) => ({
+            ...hall,
+            id: String(hall.id),
+          })),
+
+          screenings: screenings.map((item) => ({
+            ...item,
+            id: String(item.id),
+            movieId: String(item.movie_id),
+            hallId: String(item.hall_id),
+            startsAt: item.starts_at,
+          })),
+
+          bookings: bookings.map((item) => ({
+            ...item,
+            screeningId: String(item.screening_id),
+            viewer: item.user_name,
+            email: item.user_email,
+            seats: item.seats.map((seat) => ({
+              row: seat.row_number,
+              number: seat.seat_number,
+            })),
+          })),
+        })
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setLoadError(
+            error.message || 'Не удалось загрузить данные.'
+          )
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false)
+      }
+    }
+
+    load()
+
+    return () => controller.abort()
+  }, [retry])
+
   const { movies, halls, screenings, bookings } = data
   const query = search.trim().toLowerCase()
 
   const genres = [
     ...new Set(
       movies
-        .map((movie) => movie.genre.trim())
+        .map((movie) => (movie.genre || '').trim())
         .filter(Boolean)
     ),
   ].sort((a, b) => a.localeCompare(b, 'ru'))
 
   const movieOptions = [...movies]
-    .filter((movie) =>
-      tab !== 'screenings' || movie.title.toLowerCase().includes(query)
+    .filter(
+      (movie) =>
+        tab !== 'screenings' ||
+        movie.title.toLowerCase().includes(query)
     )
     .sort((a, b) => a.title.localeCompare(b.title, 'ru'))
 
   const movieList = [...movies]
-    .filter((movie) => movie.title.toLowerCase().includes(query))
+    .filter((movie) =>
+      movie.title.toLowerCase().includes(query)
+    )
     .sort((a, b) => a.title.localeCompare(b.title, 'ru'))
 
   const screeningList = screenings
     .map((screening) => ({
       ...screening,
-      movie: movies.find((movie) => movie.id === screening.movieId),
-      hall: halls.find((hall) => hall.id === screening.hallId),
+      movie: movies.find(
+        (movie) => movie.id === screening.movieId
+      ) || {
+        title: screening.movie_title,
+      },
+      hall: halls.find(
+        (hall) => hall.id === screening.hallId
+      ) || {
+        name: screening.hall_name,
+      },
     }))
-    .filter((screening) =>
-      (!movieId || screening.movieId === movieId) &&
-      (!date || screening.startsAt.slice(0, 10) === date) &&
-      (!hallId || screening.hallId === hallId) &&
-      screening.movie.title.toLowerCase().includes(query)
+    .filter(
+      (screening) =>
+        (!movieId || screening.movieId === movieId) &&
+        (!date || screening.startsAt.slice(0, 10) === date) &&
+        (!hallId || screening.hallId === hallId) &&
+        screening.movie.title.toLowerCase().includes(query)
     )
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
 
   const bookingList = bookings
-    .map((booking) => {
-      const screening = screenings.find(
-        (item) => item.id === booking.screeningId
-      )
-
-      return {
-        ...booking,
-        screening,
-        movie: movies.find((item) => item.id === screening.movieId),
-        hall: halls.find((item) => item.id === screening.hallId),
-      }
-    })
+    .map((booking) => ({
+      ...booking,
+      screening: { startsAt: booking.starts_at },
+      movie: { title: booking.movie_title },
+      hall: { name: booking.hall_name },
+    }))
     .filter((booking) => {
       const matchesSearch = [
         String(booking.id),
         booking.viewer,
         booking.email,
+        booking.ticket_code || '',
         booking.movie.title,
       ].some((value) => value.toLowerCase().includes(query))
 
       return (
         matchesSearch &&
         (!status || booking.status === status) &&
-        (!date || booking.screening.startsAt.slice(0, 10) === date)
+        (!date ||
+          booking.screening.startsAt.slice(0, 10) === date)
       )
     })
     .sort((a, b) => {
@@ -570,7 +612,9 @@ export default function AdminPage() {
 
       return (
         priority ||
-        a.screening.startsAt.localeCompare(b.screening.startsAt)
+        a.screening.startsAt.localeCompare(
+          b.screening.startsAt
+        )
       )
     })
 
@@ -615,75 +659,113 @@ export default function AdminPage() {
     setNotice(message)
   }
 
-  function saveMovie(movie) {
-    const exists = movies.some((item) => item.id === movie.id)
+  function closeModal() {
+    if (!saving.current) setModal(null)
+  }
 
-    const updatedMovies = exists
-      ? movies.map((item) => item.id === movie.id ? movie : item)
-      : [...movies, movie]
-
-    const conflict = findConflict(screenings, updatedMovies)
-
-    if (conflict) {
-      return `Изменение продолжительности создаёт конфликт. ${conflict}`
+  async function save(path, method, body, message) {
+    if (saving.current || loading || loadError) {
+      return 'Дождись загрузки данных.'
     }
 
-    setData({ ...data, movies: updatedMovies })
-    resetFilters()
-    finish(exists ? 'Изменения фильма сохранены.' : 'Фильм добавлен.')
+    saving.current = true
+    setBusy(true)
 
-    return ''
+    try {
+      await adminRequest(path, {
+        method,
+        body: body ? JSON.stringify(body) : undefined,
+      })
+
+      finish(message)
+      setLoading(true)
+      setRetry((value) => value + 1)
+
+      return ''
+    } catch (error) {
+      return error instanceof TypeError
+        ? 'Связь прервалась. Обнови список и проверь результат перед повторной попыткой.'
+        : error.message
+    } finally {
+      saving.current = false
+      setBusy(false)
+    }
+  }
+
+  function saveMovie(movie) {
+    const { id, ...body } = movie
+    const exists = movies.some((item) => item.id === id)
+
+    return save(
+      exists ? `movies/${id}` : 'movies',
+      exists ? 'PUT' : 'POST',
+      body,
+      exists ? 'Изменения фильма сохранены.' : 'Фильм добавлен.'
+    )
   }
 
   function saveScreening(screening) {
-    if (
-      !movies.some((movie) => movie.id === screening.movieId) ||
-      !halls.some((hall) => hall.id === screening.hallId)
-    ) {
-      return 'Выбери существующий фильм и зал.'
-    }
-
-    const previous = screenings.find((item) => item.id === screening.id)
+    const movie = movies.find(
+      (item) => item.id === screening.movieId
+    )
 
     if (
-      previous &&
-      new Date(previous.startsAt).getTime() <= Date.now()
+      movie?.title.toLowerCase().includes('рассвет жатвы') &&
+      screening.startsAt.slice(0, 10) < '2026-11-26'
     ) {
-      return 'Начавшийся или прошедший сеанс переносить нельзя.'
+      return 'Для этого фильма выбери дату не раньше 26 ноября 2026 года.'
     }
 
-    const updatedScreenings = previous
-      ? screenings.map((item) =>
-          item.id === screening.id ? screening : item
-        )
-      : [...screenings, screening]
+    const exists = screenings.some(
+      (item) => item.id === screening.id
+    )
 
-    const conflict = findConflict(updatedScreenings, movies)
+    const body = exists
+      ? {
+          starts_at: screening.startsAt,
+        }
+      : {
+          movie_id: Number(screening.movieId),
+          hall_id: Number(screening.hallId),
+          starts_at: screening.startsAt,
+        }
 
-    if (conflict) {
-      return conflict
-    }
-
-    setData({ ...data, screenings: updatedScreenings })
-    resetFilters()
-    finish(previous ? 'Сеанс перенесён.' : 'Сеанс создан.')
-
-    return ''
+    return save(
+      exists ? `screenings/${screening.id}` : 'screenings',
+      exists ? 'PATCH' : 'POST',
+      body,
+      exists ? 'Сеанс перенесён.' : 'Сеанс создан.'
+    )
   }
 
-  function confirmCancellation() {
-    const id = modal.booking.id
+  async function removeItem(path, question) {
+    if (!window.confirm(question)) return
 
-    setData((current) => ({
-      ...current,
-      bookings: current.bookings.map((booking) =>
-        booking.id === id && booking.status === 'cancel_requested'
-          ? { ...booking, status: 'cancelled' }
-          : booking
-      ),
-    }))
+    const error = await save(
+      path,
+      'DELETE',
+      null,
+      'Удалено.'
+    )
 
-    finish(`Отмена брони №${id} подтверждена.`)
+    if (error) window.alert(error)
+  }
+
+  async function completeBooking(booking) {
+    if (
+      !window.confirm(`Завершить бронь №${booking.id}?`)
+    ) {
+      return
+    }
+
+    const error = await save(
+      `bookings/${booking.id}/status`,
+      'PATCH',
+      { status: 'completed' },
+      `Бронь №${booking.id} завершена.`
+    )
+
+    if (error) window.alert(error)
   }
 
   return (
@@ -691,15 +773,12 @@ export default function AdminPage() {
       <header className="admin-heading">
         <p className="eyebrow">Кинотеатр «КАДР»</p>
         <h1>Панель администратора</h1>
-
-        <p className="muted">
-          Предпросмотр · тестовые данные.
-          Изменения не отправляются на сервер и сбросятся
-          после обновления страницы.
-        </p>
       </header>
 
-      <nav className="admin-tabs" aria-label="Разделы администратора">
+      <nav
+        className="admin-tabs"
+        aria-label="Разделы администратора"
+      >
         {[
           ['movies', 'Фильмы'],
           ['screenings', 'Сеансы'],
@@ -713,7 +792,8 @@ export default function AdminPage() {
             onClick={() => changeTab(id)}
           >
             {label}
-            {id === 'bookings' && cancellationCount > 0 &&
+            {id === 'bookings' &&
+              cancellationCount > 0 &&
               ` · ${cancellationCount} на отмену`}
           </button>
         ))}
@@ -723,329 +803,435 @@ export default function AdminPage() {
         {notice}
       </p>
 
-      <section className="admin-section">
-        <div className="admin-section-heading">
-          <h2>
-            {tab === 'movies'
-              ? 'Фильмы'
-              : tab === 'screenings'
-                ? 'Расписание сеансов'
-                : 'Бронирования зрителей'}
-          </h2>
+      <button
+        type="button"
+        className="button button-outline"
+        disabled={loading || busy}
+        onClick={() => setRetry((value) => value + 1)}
+      >
+        Обновить данные
+      </button>
 
-          {tab !== 'bookings' && (
-            <button
-              type="button"
-              className="button button-primary"
-              disabled={tab === 'screenings' && movies.length === 0}
-              onClick={() => openModal({
-                type: tab === 'movies' ? 'movie' : 'screening',
-              })}
-            >
-              {tab === 'movies' ? 'Добавить фильм' : 'Создать сеанс'}
-            </button>
-          )}
-        </div>
+      {loading && <p role="status">Загрузка…</p>}
 
-        <div className="admin-filters">
-          <label className="admin-search">
-            {tab === 'bookings' ? 'Поиск бронирования' : 'Поиск фильма'}
+      {loadError && (
+        <p className="admin-error" role="alert">
+          {loadError}
+        </p>
+      )}
 
-            <input
-              type="search"
-              value={search}
-              placeholder={
-                tab === 'bookings'
-                  ? 'Номер брони, зритель, почта или фильм'
-                  : 'Название фильма'
-              }
-              onChange={(event) => {
-                updateFilter(setSearch, event.target.value)
+      {!loading && !loadError && (
+        <section className="admin-section">
+          <div className="admin-section-heading">
+            <h2>
+              {tab === 'movies'
+                ? 'Фильмы'
+                : tab === 'screenings'
+                  ? 'Расписание сеансов'
+                  : 'Бронирования зрителей'}
+            </h2>
 
-                if (tab === 'screenings') {
-                  setMovieId('')
+            {tab !== 'bookings' && (
+              <button
+                type="button"
+                className="button button-primary"
+                disabled={
+                  busy ||
+                  (tab === 'screenings' &&
+                    (!movies.length || !halls.length))
                 }
-              }}
-            />
-          </label>
-
-          {tab === 'screenings' && (
-            <>
-              <label>
-                Фильм
-                <select
-                  value={movieId}
-                  onChange={(event) =>
-                    updateFilter(setMovieId, event.target.value)
-                  }
-                >
-                  <option value="">Все найденные фильмы</option>
-
-                  {movieOptions.map((movie) => (
-                    <option key={movie.id} value={movie.id}>
-                      {movie.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                Зал
-                <select
-                  value={hallId}
-                  onChange={(event) =>
-                    updateFilter(setHallId, event.target.value)
-                  }
-                >
-                  <option value="">Все залы</option>
-
-                  {halls.map((hall) => (
-                    <option key={hall.id} value={hall.id}>
-                      {hall.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </>
-          )}
-
-          {tab !== 'movies' && (
-            <label>
-              Дата сеанса
-              <input
-                type="date"
-                value={date}
-                onChange={(event) =>
-                  updateFilter(setDate, event.target.value)
-                }
-              />
-            </label>
-          )}
-
-          {tab === 'bookings' && (
-            <label>
-              Статус
-              <select
-                value={status}
-                onChange={(event) =>
-                  updateFilter(setStatus, event.target.value)
+                onClick={() =>
+                  openModal({
+                    type:
+                      tab === 'movies'
+                        ? 'movie'
+                        : 'screening',
+                  })
                 }
               >
-                <option value="">Все статусы</option>
-
-                {Object.entries(STATUS_LABELS).map(([id, label]) => (
-                  <option key={id} value={id}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-        </div>
-
-        <div className="admin-results">
-          <span className="muted">
-            Найдено: {currentList.length}
-          </span>
-
-          <button
-            type="button"
-            className="admin-reset"
-            onClick={resetFilters}
-          >
-            Сбросить фильтры
-          </button>
-        </div>
-
-        {currentList.length === 0 && (
-          <div className="admin-card">
-            <h3>Ничего не найдено</h3>
-            <p className="muted">
-              Попробуй изменить условия поиска.
-            </p>
+                {tab === 'movies'
+                  ? 'Добавить фильм'
+                  : 'Создать сеанс'}
+              </button>
+            )}
           </div>
-        )}
 
-        {tab === 'movies' &&
-          movieList.slice(0, visibleCount).map((movie) => (
-            <article className="admin-card" key={movie.id}>
-              <div className="admin-card-header">
-                <div>
-                  <h3>{movie.title}</h3>
-                  <p className="muted">
-                    {movie.genre} · {movie.duration_minutes} мин ·{' '}
-                    {movie.age_rating}
-                  </p>
-                </div>
+          <div className="admin-filters">
+            <label className="admin-search">
+              {tab === 'bookings'
+                ? 'Поиск бронирования'
+                : 'Поиск фильма'}
 
-                <button
-                  type="button"
-                  className="button button-outline"
-                  onClick={() => openModal({ type: 'movie', movie })}
-                >
-                  Редактировать
-                </button>
-              </div>
+              <input
+                type="search"
+                value={search}
+                placeholder={
+                  tab === 'bookings'
+                    ? 'Номер брони, зритель, почта или фильм'
+                    : 'Название фильма'
+                }
+                onChange={(event) => {
+                  updateFilter(setSearch, event.target.value)
 
-              <p className="admin-description">
-                {movie.description}
-              </p>
-            </article>
-          ))}
+                  if (tab === 'screenings') setMovieId('')
+                }}
+              />
+            </label>
 
-        {tab === 'screenings' &&
-          screeningList.slice(0, visibleCount).map((screening) => (
-            <article className="admin-card" key={screening.id}>
-              <div className="admin-card-header">
-                <div>
-                  <h3>{screening.movie.title}</h3>
-                  <p className="muted">
-                    {screening.hall.name} ·{' '}
-                    {screening.movie.duration_minutes} мин
-                  </p>
-                  <time dateTime={screening.startsAt}>
-                    {formatStart(screening.startsAt)}
-                  </time>
-                </div>
+            {tab === 'screenings' && (
+              <>
+                <label>
+                  Фильм
+                  <select
+                    value={movieId}
+                    onChange={(event) =>
+                      updateFilter(
+                        setMovieId,
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="">
+                      Все найденные фильмы
+                    </option>
 
-                <button
-                  type="button"
-                  className="button button-outline"
-                  disabled={
-                    new Date(screening.startsAt).getTime() <= Date.now()
+                    {movieOptions.map((movie) => (
+                      <option key={movie.id} value={movie.id}>
+                        {movie.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  Зал
+                  <select
+                    value={hallId}
+                    onChange={(event) =>
+                      updateFilter(
+                        setHallId,
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="">Все залы</option>
+
+                    {halls.map((hall) => (
+                      <option key={hall.id} value={hall.id}>
+                        {hall.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            )}
+
+            {tab !== 'movies' && (
+              <label>
+                Дата сеанса
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(event) =>
+                    updateFilter(setDate, event.target.value)
                   }
-                  onClick={() => openModal({
-                    type: 'screening',
-                    screening,
-                  })}
+                />
+              </label>
+            )}
+
+            {tab === 'bookings' && (
+              <label>
+                Статус
+                <select
+                  value={status}
+                  onChange={(event) =>
+                    updateFilter(
+                      setStatus,
+                      event.target.value
+                    )
+                  }
                 >
-                  Перенести сеанс
-                </button>
-              </div>
-            </article>
-          ))}
+                  <option value="">Все статусы</option>
 
-        {tab === 'bookings' &&
-          bookingList.slice(0, visibleCount).map((booking) => (
-            <article className="admin-card" key={booking.id}>
-              <div className="admin-card-header">
-                <div>
-                  <p className="admin-booking-id">
-                    Бронь №{booking.id}
-                  </p>
-                  <h3>{booking.movie.title}</h3>
-                </div>
+                  {Object.entries(STATUS_LABELS).map(
+                    ([id, label]) => (
+                      <option key={id} value={id}>
+                        {label}
+                      </option>
+                    )
+                  )}
+                </select>
+              </label>
+            )}
+          </div>
 
-                <span
-                  className={`admin-status admin-status-${booking.status}`}
-                >
-                  {STATUS_LABELS[booking.status]}
-                </span>
-              </div>
+          <div className="admin-results">
+            <span className="muted">
+              Найдено: {currentList.length}
+            </span>
 
-              <p>{booking.viewer} · {booking.email}</p>
+            <button
+              type="button"
+              className="admin-reset"
+              onClick={resetFilters}
+            >
+              Сбросить фильтры
+            </button>
+          </div>
 
+          {currentList.length === 0 && (
+            <div className="admin-card">
+              <h3>Ничего не найдено</h3>
               <p className="muted">
-                {formatStart(booking.screening.startsAt)} ·{' '}
-                {booking.hall.name}
+                Попробуй изменить условия поиска.
               </p>
+            </div>
+          )}
 
-              <p>
-                {booking.seats
-                  .map((seat) =>
-                    `Ряд ${seat.row}, место ${seat.number}`
-                  )
-                  .join(' · ')}
-              </p>
+          {tab === 'movies' &&
+            movieList.slice(0, visibleCount).map((movie) => (
+              <article className="admin-card" key={movie.id}>
+                <div className="admin-card-header">
+                  <div className="admin-movie-info">
+                    <h3>{movie.title}</h3>
 
-              {booking.status === 'cancel_requested' && (
-                <button
-                  type="button"
-                  className="button button-primary"
-                  onClick={() => openModal({
-                    type: 'cancellation',
-                    booking,
-                  })}
+                    <p className="muted">
+                      {movie.genre} · {movie.duration_minutes} мин ·{' '}
+                      {movie.age_rating}
+                    </p>
+
+                    <p className="admin-description">
+                      {movie.description}
+                    </p>
+                  </div>
+
+                  <div className="admin-card-buttons">
+                    <button
+                      type="button"
+                      className="button button-outline"
+                      disabled={busy}
+                      onClick={() =>
+                        openModal({ type: 'movie', movie })
+                      }
+                    >
+                      Редактировать
+                    </button>
+
+                    <button
+                      type="button"
+                      className="button button-outline"
+                      disabled={busy}
+                      onClick={() =>
+                        removeItem(
+                          `movies/${movie.id}`,
+                          `Удалить фильм «${movie.title}»?`
+                        )
+                      }
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+
+          {tab === 'screenings' &&
+            screeningList
+              .slice(0, visibleCount)
+              .map((screening) => (
+                <article
+                  className="admin-card"
+                  key={screening.id}
                 >
-                  Подтвердить отмену
-                </button>
-              )}
-            </article>
-          ))}
+                  <div className="admin-card-header">
+                    <div>
+                      <h3>{screening.movie.title}</h3>
 
-        {visibleCount < currentList.length && (
-          <button
-            type="button"
-            className="button button-outline admin-show-more"
-            onClick={() =>
-              setVisibleCount((count) => count + PAGE_SIZE)
-            }
-          >
-            Показать ещё
-          </button>
-        )}
-      </section>
+                      <p className="muted">
+                        {screening.hall.name} ·{' '}
+                        {screening.movie.duration_minutes} мин
+                      </p>
+
+                      <time dateTime={screening.startsAt}>
+                        {formatStart(screening.startsAt)}
+                      </time>
+                    </div>
+
+                    <div className="admin-card-buttons">
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        disabled={
+                          busy ||
+                          new Date(
+                            screening.startsAt
+                          ).getTime() <= Date.now()
+                        }
+                        onClick={() =>
+                          openModal({
+                            type: 'screening',
+                            screening,
+                          })
+                        }
+                      >
+                        Перенести сеанс
+                      </button>
+
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        disabled={
+                          busy ||
+                          new Date(
+                            screening.startsAt
+                          ).getTime() <= Date.now()
+                        }
+                        onClick={() =>
+                          removeItem(
+                            `screenings/${screening.id}`,
+                            'Удалить этот сеанс?'
+                          )
+                        }
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+
+          {tab === 'bookings' &&
+            bookingList
+              .slice(0, visibleCount)
+              .map((booking) => (
+                <article
+                  className="admin-card"
+                  key={booking.id}
+                >
+                  <div className="admin-card-header">
+                    <div>
+                      <p className="admin-booking-id">
+                        Бронь №{booking.id}
+                      </p>
+                      <h3>{booking.movie.title}</h3>
+                    </div>
+
+                    <span
+                      className={`admin-status admin-status-${
+                        booking.status === 'active' &&
+                        new Date(booking.end_at).getTime() <=
+                          Date.now()
+                          ? 'completed'
+                          : booking.status
+                      }`}
+                    >
+                      {booking.status === 'active' &&
+                      new Date(booking.end_at).getTime() <=
+                        Date.now()
+                        ? 'Сеанс прошёл'
+                        : STATUS_LABELS[booking.status] ||
+                          booking.status}
+                    </span>
+                  </div>
+
+                  <p>
+                    {booking.viewer} · {booking.email}
+                  </p>
+
+                  <p className="muted">
+                    {formatStart(
+                      booking.screening.startsAt
+                    )}{' '}
+                    · {booking.hall.name}
+                  </p>
+
+                  <p>
+                    {booking.seats
+                      .map(
+                        (seat) =>
+                          `Ряд ${seat.row}, место ${seat.number}`
+                      )
+                      .join(' · ')}
+                  </p>
+
+                  {booking.ticket_code && (
+                    <details>
+                      <summary>Код билета</summary>
+                      <p style={{ overflowWrap: 'anywhere' }}>
+                        {booking.ticket_code}
+                      </p>
+                    </details>
+                  )}
+
+                  {booking.status === 'active' &&
+                    new Date(booking.end_at).getTime() <=
+                      Date.now() && (
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        disabled={busy}
+                        onClick={() =>
+                          completeBooking(booking)
+                        }
+                      >
+                        Завершить бронь
+                      </button>
+                    )}
+                </article>
+              ))}
+
+          {visibleCount < currentList.length && (
+            <button
+              type="button"
+              className="button button-outline admin-show-more"
+              onClick={() =>
+                setVisibleCount(
+                  (count) => count + PAGE_SIZE
+                )
+              }
+            >
+              Показать ещё
+            </button>
+          )}
+        </section>
+      )}
 
       {modal?.type === 'movie' && (
         <AdminDialog
-          title={modal.movie ? 'Редактирование фильма' : 'Новый фильм'}
-          onClose={() => setModal(null)}
+          title={
+            modal.movie
+              ? 'Редактирование фильма'
+              : 'Новый фильм'
+          }
+          onClose={closeModal}
         >
           <MovieForm
             movie={modal.movie}
             genres={genres}
+            busy={busy}
             onSave={saveMovie}
-            onClose={() => setModal(null)}
+            onClose={closeModal}
           />
         </AdminDialog>
       )}
 
       {modal?.type === 'screening' && (
         <AdminDialog
-          title={modal.screening ? 'Перенос сеанса' : 'Новый сеанс'}
-          onClose={() => setModal(null)}
+          title={
+            modal.screening
+              ? 'Перенос сеанса'
+              : 'Новый сеанс'
+          }
+          onClose={closeModal}
         >
           <ScreeningForm
             screening={modal.screening}
             movies={movies}
             halls={halls}
+            busy={busy}
             onSave={saveScreening}
-            onClose={() => setModal(null)}
+            onClose={closeModal}
           />
-        </AdminDialog>
-      )}
-
-      {modal?.type === 'cancellation' && (
-        <AdminDialog
-          title="Отмена бронирования"
-          onClose={() => setModal(null)}
-        >
-          <p>
-            Подтвердить отмену брони №{modal.booking.id}?
-          </p>
-
-          <p className="muted">
-            В предпросмотре изменится только статус тестовой брони.
-          </p>
-
-          <div className="admin-actions">
-            <button
-              type="button"
-              className="button button-outline"
-              onClick={() => setModal(null)}
-              autoFocus
-            >
-              Назад
-            </button>
-
-            <button
-              type="button"
-              className="button button-primary"
-              onClick={confirmCancellation}
-            >
-              Подтвердить отмену
-            </button>
-          </div>
         </AdminDialog>
       )}
     </main>
