@@ -1,17 +1,77 @@
+/* Общие элементы */
+
 .container {
   width: min(1200px, calc(100% - 64px));
   margin-inline: auto;
 }
+
+h2 {
+  margin-top: 12px;
+  font-size: clamp(30px, 4vw, 44px);
+  letter-spacing: -1px;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.muted {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+
+/* Кнопки */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  min-height: 48px;
+  padding: 14px 22px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 150ms, border-color 150ms;
+}
+
+.button-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.button-primary:hover {
+  background: #c91635;
+}
+
+.button-outline {
+  border-color: var(--border);
+  background: transparent;
+}
+
+.button-outline:hover {
+  border-color: var(--accent);
+  background: #e7204210;
+}
+
+
+/* Шапка и навигация */
 
 .header {
   border-bottom: 1px solid var(--border);
 }
 
 .header-inner {
-  min-height: 88px;
   display: flex;
   align-items: center;
   gap: 64px;
+  min-height: 68px;
 }
 
 .logo {
@@ -21,8 +81,8 @@
 }
 
 .logo span {
-  color: var(--accent);
   margin-right: 7px;
+  color: var(--accent);
 }
 
 .navigation {
@@ -42,13 +102,17 @@
   font-size: 13px;
 }
 
+
+/* Главный баннер */
+
 .hero {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background:
-    linear-gradient(110deg, #141416 35%, transparent),
-    radial-gradient(ellipse at 90% 40%, #791b2b, #191215 70%);
+  background-image: url('/images/hogwarts.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
 }
 
 .hero-inner {
@@ -57,19 +121,11 @@
   padding-block: 78px 30px;
 }
 
-.eyebrow {
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
 .hero h1 {
   margin-top: 22px;
-  font-size: clamp(44px, 6.5vw, 86px);
-  line-height: 1.02;
-  letter-spacing: -3px;
+  font-size: clamp(44px, 4.2vw, 56px);
+  line-height: 1.08;
+  letter-spacing: -1.5px;
 }
 
 .hero-description {
@@ -77,29 +133,6 @@
   margin-block: 26px 32px;
   color: #b9b9c0;
   line-height: 1.7;
-}
-
-.button {
-  min-height: 48px;
-  display: inline-flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 28px;
-  padding: 14px 22px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 700;
-  transition: background 150ms, border-color 150ms;
-}
-
-.button-primary {
-  background: var(--accent);
-  color: white;
-}
-
-.button-primary:hover {
-  background: #c91635;
 }
 
 .hero-bottom {
@@ -113,18 +146,8 @@
   font-size: 12px;
 }
 
-.hero-word {
-  position: absolute;
-  z-index: -1;
-  top: 22%;
-  right: -45px;
-  color: #ffffff07;
-  font-size: clamp(180px, 25vw, 370px);
-  font-weight: 900;
-  letter-spacing: -20px;
-  transform: rotate(-12deg);
-  user-select: none;
-}
+
+/* Афиша и фильтры */
 
 .afisha {
   padding-block: 68px 80px;
@@ -137,23 +160,13 @@
   gap: 24px;
 }
 
-h2 {
-  margin-top: 12px;
-  font-size: clamp(30px, 4vw, 44px);
-  letter-spacing: -1px;
-}
-
-.muted {
-  color: var(--muted);
-  line-height: 1.7;
-}
-
 .section-heading > p {
   font-size: 14px;
 }
 
 .filters {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px 200px;
   gap: 16px;
   margin-block: 30px;
 }
@@ -162,6 +175,7 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 9px;
+  min-width: 0;
 }
 
 .filters label > span {
@@ -169,24 +183,36 @@ h2 {
   font-size: 12px;
 }
 
-.search-field {
-  flex: 1;
-}
-
-.genre-field {
-  width: 220px;
-}
-
 .filters input,
 .filters select {
+  box-sizing: border-box;
   width: 100%;
+  min-width: 0;
   height: 48px;
   padding: 0 16px;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: #19191d;
   color: #f5f5f6;
+  font: inherit;
 }
+
+.filters input[type="date"] {
+  color-scheme: dark;
+}
+
+.empty-state {
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.empty-state p {
+  margin-block: 16px 24px;
+  color: var(--muted);
+}
+
+
+/* Карточки фильмов */
 
 .movie-grid {
   display: grid;
@@ -194,14 +220,42 @@ h2 {
   gap: 24px;
 }
 
+.movie-card {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-card h3 {
+  margin: 9px 0 12px;
+  font-size: 19px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.movie-card .button {
+  width: 100%;
+}
+
+.movie-meta {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+
+/* Постеры и заглушки */
+
 .poster {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  aspect-ratio: 2 / 3;
   display: flex;
   flex-direction: column;
   justify-content: end;
+  aspect-ratio: 2 / 3;
   padding: 24px;
   border-radius: 8px;
 }
@@ -210,13 +264,22 @@ h2 {
   content: "";
   position: absolute;
   z-index: -1;
-  width: 140%;
-  height: 35%;
   top: 28%;
   left: -20%;
+  width: 140%;
+  height: 35%;
   border: 1px solid currentColor;
   opacity: 0.2;
   transform: rotate(-35deg);
+}
+
+.poster-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .poster-train {
@@ -248,6 +311,10 @@ h2 {
   font-size: 11px;
 }
 
+.poster .age {
+  z-index: 2;
+}
+
 .poster-caption {
   margin-bottom: auto;
   padding-top: 30px;
@@ -256,10 +323,12 @@ h2 {
 }
 
 .poster-title {
-  font-size: clamp(25px, 2.5vw, 36px);
-  line-height: 1;
+  font-size: clamp(14px, 8cqw, 32px);
+  line-height: 1.08;
   text-transform: uppercase;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .poster-label {
@@ -268,40 +337,8 @@ h2 {
   letter-spacing: 3px;
 }
 
-.movie-meta {
-  margin-top: 18px;
-  color: var(--muted);
-  font-size: 12px;
-}
 
-.movie-card h3 {
-  margin-block: 9px 18px;
-  font-size: 19px;
-}
-
-.button-outline {
-  border-color: var(--border);
-  background: transparent;
-}
-
-.movie-card .button {
-  width: 100%;
-}
-
-.button-outline:hover {
-  border-color: var(--accent);
-  background: #e7204210;
-}
-
-.empty-state {
-  padding: 48px 16px;
-  text-align: center;
-}
-
-.empty-state p {
-  margin-block: 16px 24px;
-  color: var(--muted);
-}
+/* О кинотеатре и подвал */
 
 .about {
   padding-block: 60px;
@@ -328,6 +365,9 @@ h2 {
   font-size: 12px;
 }
 
+
+/* Окно фильма */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -338,11 +378,16 @@ h2 {
   background: #000b;
 }
 
+.modal-backdrop[hidden] {
+  display: none;
+}
+
 .movie-modal {
+  position: relative;
   width: min(100%, 540px);
   max-height: 90vh;
   overflow: auto;
-  padding: 32px;
+  padding: 24px 32px 32px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #19191d;
@@ -357,10 +402,29 @@ h2 {
   color: var(--muted);
 }
 
+.movie-modal .close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  margin: 0;
+}
+
+.movie-modal > .eyebrow {
+  min-height: 20px;
+  padding-right: 100px;
+}
+
+.movie-modal > h2 {
+  margin-top: 8px;
+}
+
 .movie-modal > p:not(.eyebrow) {
   margin-top: 20px;
   line-height: 1.6;
 }
+
+
+/* Расписание и выбор сеанса */
 
 .demo-note {
   padding-top: 20px;
@@ -369,25 +433,187 @@ h2 {
   font-size: 13px;
 }
 
+.movie-modal .demo-note {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.movie-schedule label {
+  color: #f5f5f6;
+  font-weight: 700;
+}
+
+.movie-schedule input {
+  width: 100%;
+  max-width: 220px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #19191d;
+  color: #f5f5f6;
+  color-scheme: dark;
+  font: inherit;
+}
+
+.movie-schedule h3 {
+  margin-top: 8px;
+}
+
+.screening-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.screening-list strong {
+  color: #f5f5f6;
+}
+
+.screening-button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.screening-button:hover,
+.screening-button:focus-visible {
+  border-color: var(--accent);
+  background: #e7204214;
+}
+
+.screening-button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+
+/* Выбор мест */
+
+.seat-page {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  overflow-y: auto;
+  background: #101012;
+}
+
+.seat-page .seat-page-inner {
+  padding-top: 32px;
+}
+
+.seat-page .seat-page-inner > .eyebrow {
+  margin: 28px 0 10px;
+}
+
+.seat-page .seat-page-inner > h1 {
+  margin: 0 0 12px;
+}
+
+.seat-page .seat-page-inner > .muted {
+  margin: 0 0 28px;
+}
+
+
+/* Оформление бронирования */
+
+.booking-next {
+  margin-top: 20px;
+}
+
+.booking-next:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.booking-review {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.booking-review h2,
+.booking-review ul {
+  margin: 0;
+}
+
+.booking-review ul {
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+.booking-review button {
+  justify-self: start;
+}
+
+
+/* Большие экраны */
+
+@media (min-width: 901px) {
+  .hero-inner {
+    box-sizing: border-box;
+    min-height: 580px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-bottom {
+    align-self: stretch;
+    margin-top: auto;
+  }
+}
+
+
+/* Планшеты */
+
 @media (max-width: 900px) {
-  .movie-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .header-inner {
+    justify-content: space-between;
   }
 
   .header-caption {
     display: none;
   }
 
-  .header-inner {
-    justify-content: space-between;
-  }
-
   .section-heading {
-    align-items: start;
     flex-direction: column;
+    align-items: start;
     gap: 12px;
   }
+
+  .movie-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
+
+@media (max-width: 760px) {
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filters .search-field {
+    grid-column: 1 / -1;
+  }
+}
+
+
+/* Телефоны */
 
 @media (max-width: 540px) {
   .container {
@@ -426,186 +652,34 @@ h2 {
   }
 
   .filters {
-    flex-direction: column;
-  }
-
-  .genre-field {
-    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .movie-grid {
     gap: 24px 14px;
   }
 
-  .poster {
-    padding: 14px;
+  .movie-card h3 {
+    font-size: 16px;
   }
 
-  .poster-title {
-    font-size: 23px;
+  .movie-card .button {
+    gap: 8px;
+    padding-inline: 12px;
+    font-size: 12px;
+  }
+
+  .poster {
+    padding: 14px;
   }
 
   .poster-caption {
     font-size: 10px;
   }
 
-  .movie-card h3 {
-    font-size: 16px;
-    min-height: 38px;
-  }
-
-  .movie-card .button {
-    padding-inline: 12px;
-    gap: 8px;
-    font-size: 12px;
-  }
-
   .footer {
-    align-items: start;
     flex-direction: column;
+    align-items: start;
     gap: 16px;
   }
-}
-
-.movie-modal .demo-note {
-  display: grid;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.movie-modal {
-  position: relative;
-  padding-top: 24px;
-}
-
-.movie-modal .close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  margin: 0;
-}
-
-.movie-modal > .eyebrow {
-  padding-right: 100px;
-  min-height: 20px;
-}
-
-.movie-modal > h2 {
-  margin-top: 8px;
-}
-
-.movie-schedule label {
-  color: #f5f5f6;
-  font-weight: 700;
-}
-
-.movie-schedule input {
-  width: 100%;
-  max-width: 220px;
-  min-height: 44px;
-  padding: 8px 12px;
-  color-scheme: dark;
-  color: #f5f5f6;
-  background: #19191d;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font: inherit;
-}
-
-.movie-schedule h3 {
-  margin-top: 8px;
-}
-
-.screening-list {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.screening-button {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  text-align: left;
-  cursor: pointer;
-}
-
-.screening-button:hover,
-.screening-button:focus-visible {
-  border-color: var(--accent);
-  background: #e7204214;
-}
-
-.screening-button[aria-pressed="true"] {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: white;
-}
-
-.screening-list strong {
-  color: #f5f5f6;
-}
-
-.seat-page {
-  position: fixed;
-  inset: 0;
-  z-index: 11;
-  overflow-y: auto;
-  background: #101012;
-}
-
-.seat-page .seat-page-inner {
-  padding-top: 32px;
-}
-
-.seat-page .seat-page-inner > .eyebrow {
-  margin: 28px 0 10px;
-}
-
-.seat-page .seat-page-inner > h1 {
-  margin: 0 0 12px;
-}
-
-.seat-page .seat-page-inner > .muted {
-  margin: 0 0 28px;
-}
-
-.booking-next {
-  margin-top: 20px;
-}
-
-.booking-next:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.booking-review {
-  display: grid;
-  gap: 14px;
-  margin-top: 24px;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-
-.booking-review h2,
-.booking-review ul {
-  margin: 0;
-}
-
-.booking-review ul {
-  padding-left: 20px;
-  line-height: 1.8;
-}
-
-.booking-review button {
-  justify-self: start;
 }
